@@ -1,0 +1,5 @@
+events.ndjson
+fetched-events.ndjson
+collector.sqlite3*
+config.json
+*.tmp

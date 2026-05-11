@@ -1,0 +1,47 @@
+name: AI PR Attribution
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+jobs:
+  attribution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch attribution refs
+        run: |
+          git fetch origin '+refs/ai-attribution/*:refs/ai-attribution/*' || true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install attribution CLI
+        run: pip install .
+
+      - name: Collect events from all developers
+        run: |
+          ai-pr-attribution fetch-telemetry \
+            --repo . \
+            --output .ai-pr-attribution/fetched-events.ndjson \
+            --github-native || true
+
+      - name: Post attribution comment
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ai-pr-attribution analyze-pr \
+            --repo . \
+            --diff-url "${{ github.event.pull_request.diff_url }}" \
+            --commit-sha "${{ github.event.pull_request.head.sha }}" \
+            --events-file .ai-pr-attribution/fetched-events.ndjson \
+            --post-comment
