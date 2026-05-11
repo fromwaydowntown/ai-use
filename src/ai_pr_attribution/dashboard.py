@@ -468,6 +468,19 @@ def render_dashboard_html(repo: Path) -> str:
       --amber: #b7791f;
       --shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 14px 30px rgba(16, 24, 40, .06);
     }}
+    @media (prefers-color-scheme: dark) {{
+      :root {{
+        --bg: #0d1117;
+        --surface: #161b22;
+        --ink: #e6edf3;
+        --muted: #8b949e;
+        --line: #30363d;
+        --green: #3fb950;
+        --blue: #58a6ff;
+        --amber: #d29922;
+        --shadow: 0 1px 2px rgba(0,0,0,.3), 0 14px 30px rgba(0,0,0,.2);
+      }}
+    }}
     * {{ box-sizing: border-box; }}
     body {{
       margin: 0;
@@ -495,9 +508,21 @@ def render_dashboard_html(repo: Path) -> str:
       font-weight: 800;
       font-size: 12px;
     }}
-    .brand {{ min-width: 0; }}
+    .brand {{ min-width: 0; flex: 1; }}
     .brand strong {{ display: block; font-size: 14px; }}
     .brand span {{ display: block; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 66vw; }}
+    .refresh-btn {{
+      flex-shrink: 0;
+      height: 32px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 13px;
+      cursor: pointer;
+    }}
+    .refresh-btn:hover {{ background: var(--bg); }}
     main {{ max-width: 1040px; margin: 0 auto; padding: 34px 28px; }}
     .hero {{
       display: grid;
@@ -580,6 +605,7 @@ def render_dashboard_html(repo: Path) -> str:
   <nav class="topbar">
     <div class="mark">CR</div>
     <div class="brand"><strong>Contribution Retention</strong><span>{repo_label}</span></div>
+    <button class="refresh-btn" onclick="refresh()" title="Refresh now">↻ Refresh</button>
   </nav>
   <main>
     <section class="hero">
@@ -651,6 +677,8 @@ def render_dashboard_html(repo: Path) -> str:
   </main>
   <script>
     const fmt = new Intl.NumberFormat();
+    const TOOL_LABELS = {{claude_code: 'Claude Code', cursor: 'Cursor', codex: 'Codex'}};
+    function toolLabel(tool) {{ return TOOL_LABELS[tool] || tool; }}
     function esc(value) {{
       return String(value ?? '').replace(/[&<>"']/g, ch => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[ch]));
     }}
@@ -669,7 +697,7 @@ def render_dashboard_html(repo: Path) -> str:
       const max = Math.max(...rows.map(row => row.lines), 1);
       el.innerHTML = rows.map(row => `
         <div class="tool-row">
-          <div class="tool-name">${{esc(row.tool)}}</div>
+          <div class="tool-name">${{esc(toolLabel(row.tool))}}</div>
           <div class="track"><div class="fill" style="width:${{Math.max(3, row.lines / max * 100)}}%"></div></div>
           <div class="number">${{fmt.format(row.lines)}}</div>
         </div>
@@ -695,7 +723,7 @@ def render_dashboard_html(repo: Path) -> str:
           <tbody>
             ${{rows.map(row => `
               <tr>
-                <td>${{esc(row[nameKey])}}</td>
+                <td>${{esc(nameKey === 'tool' ? toolLabel(row[nameKey]) : row[nameKey])}}</td>
                 <td class="num">${{fmt.format(row.generated)}}</td>
                 <td class="num">${{fmt.format(row.retained)}}</td>
                 <td class="num">${{Number(row.percent || 0).toFixed(1)}}%</td>
@@ -740,10 +768,22 @@ def render_dashboard_html(repo: Path) -> str:
 """
 
 
+TOOL_LABELS: dict[str, str] = {
+    "claude_code": "Claude Code",
+    "cursor": "Cursor",
+    "codex": "Codex",
+}
+
+
+def tool_label(tool: str) -> str:
+    return TOOL_LABELS.get(tool, tool)
+
+
 def _chunk_row(chunk: AiCodeChunk) -> dict:
     return {
         "event_time": chunk.event_time,
         "tool": chunk.tool,
+        "tool_label": tool_label(chunk.tool),
         "file_path": chunk.file_path,
         "hashed_lines": len(chunk.line_hashes),
         "source": chunk.metadata.get("source") or chunk.metadata.get("hook_event_name") or chunk.metadata.get("edit_source") or "",
