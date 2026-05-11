@@ -12,22 +12,26 @@ HOOK_MARKER = "# ai-pr-attribution managed hook"
 HOOK_SCRIPT = """#!/usr/bin/env sh
 tool="${AI_PR_ATTRIBUTION_TOOL:-cursor}"
 repo="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-if [ -x "$repo/.venv/bin/ai-pr-attribution" ]; then
-  cli="$repo/.venv/bin/ai-pr-attribution"
+if [ -x "$repo/.venv/bin/python" ]; then
+  py="$repo/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  py="python3"
 else
-  cli="ai-pr-attribution"
+  py="python"
 fi
-exec "$cli" collect-hook --tool "$tool" --repo "$repo"
+exec "$py" -m ai_pr_attribution.cli collect-hook --tool "$tool" --repo "$repo"
 """
 
 CODEX_IMPORT_SCRIPT = """#!/usr/bin/env sh
 repo="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-if [ -x "$repo/.venv/bin/ai-pr-attribution" ]; then
-  cli="$repo/.venv/bin/ai-pr-attribution"
+if [ -x "$repo/.venv/bin/python" ]; then
+  py="$repo/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  py="python3"
 else
-  cli="ai-pr-attribution"
+  py="python"
 fi
-"$cli" import-codex-session --repo "$repo" >/dev/null 2>&1 || true
+"$py" -m ai_pr_attribution.cli import-codex-session --repo "$repo" >/dev/null 2>&1 || true
 """
 
 UPLOAD_SCRIPT = """#!/usr/bin/env sh
@@ -48,13 +52,15 @@ if [ "${AI_PR_ATTRIBUTION_UPLOADING:-0}" = "1" ]; then
 fi
 export AI_PR_ATTRIBUTION_UPLOADING=1
 repo="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-if [ -x "$repo/.venv/bin/ai-pr-attribution" ]; then
-  cli="$repo/.venv/bin/ai-pr-attribution"
+if [ -x "$repo/.venv/bin/python" ]; then
+  py="$repo/.venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  py="python3"
 else
-  cli="ai-pr-attribution"
+  py="python"
 fi
-"$cli" import-codex-session --repo "$repo" >/dev/null 2>&1 || true
-"$cli" upload-ref --repo "$repo" >/dev/null 2>&1 || true
+"$py" -m ai_pr_attribution.cli import-codex-session --repo "$repo" >/dev/null 2>&1 || true
+"$py" -m ai_pr_attribution.cli upload-ref --repo "$repo" >/dev/null 2>&1 || true
 """
 
 
