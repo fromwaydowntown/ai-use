@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "AI_PR_ATTRIBUTION_TOOL=claude_code '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "AI_PR_ATTRIBUTION_TOOL=claude_code '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'"
+          }
+        ]
+      }
+    ]
+  }
+}

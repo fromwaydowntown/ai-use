@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "AI_PR_ATTRIBUTION_TOOL=cursor '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'"
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "AI_PR_ATTRIBUTION_TOOL=cursor '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'"
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "AI_PR_ATTRIBUTION_TOOL=cursor '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'"
+      }
+    ],
+    "afterTabFileEdit": [
+      {
+        "command": "AI_PR_ATTRIBUTION_TOOL=cursor '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'"
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "AI_PR_ATTRIBUTION_TOOL=cursor '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'"
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "AI_PR_ATTRIBUTION_TOOL=cursor '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'"
+      }
+    ],
+    "afterShellExecution": [
+      {
+        "command": "AI_PR_ATTRIBUTION_TOOL=cursor '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'"
+      }
+    ],
+    "beforeMCPExecution": [
+      {
+        "command": "AI_PR_ATTRIBUTION_TOOL=cursor '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'"
+      }
+    ],
+    "afterMCPExecution": [
+      {
+        "command": "AI_PR_ATTRIBUTION_TOOL=cursor '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'"
+      }
+    ],
+    "stop": [
+      {
+        "command": "AI_PR_ATTRIBUTION_TOOL=cursor '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'"
+      }
+    ]
+  }
+}
