@@ -99,3 +99,4 @@ these secrets:
 On pull requests, the Action fetches the PR diff, downloads hash-only telemetry
 for the PR head SHA from the collector, runs the matcher, and updates one sticky
 PR comment.
+# Self-test
