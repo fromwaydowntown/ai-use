@@ -2,7 +2,7 @@ name: AI PR Attribution
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review, closed]
 
 permissions:
   contents: read
@@ -43,10 +43,12 @@ jobs:
       - name: Post attribution comment
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGED: ${{ github.event.pull_request.merged }}
         run: |
           ai-pr-attribution analyze-pr \
             --repo . \
             --diff-file pr.diff \
             --commit-sha "${{ github.event.pull_request.head.sha }}" \
             --events-file .ai-pr-attribution/fetched-events.ndjson \
-            --post-comment
+            --post-comment \
+            ${{ github.event.pull_request.merged && '--final' || '' }}

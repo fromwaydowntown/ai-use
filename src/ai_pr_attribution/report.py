@@ -23,7 +23,7 @@ def summary_to_json(summary: AttributionSummary) -> str:
     )
 
 
-def render_markdown(summary: AttributionSummary, attributions: list[LineAttribution]) -> str:
+def render_markdown(summary: AttributionSummary, attributions: list[LineAttribution], final: bool = False) -> str:
     rows = [
         ("Total added lines", str(summary.total_added_lines)),
         ("AI-attributed lines", str(summary.attributed_lines)),
@@ -40,8 +40,15 @@ def render_markdown(summary: AttributionSummary, attributions: list[LineAttribut
         for file_path, values in files.items()
     ) or "| none | 0 | 0 | 0.00% |"
 
+    heading = "## AI PR Attribution — Final Score ✓" if final else "## AI PR Attribution"
+    footer = (
+        "_Final score recorded at merge time._"
+        if final
+        else "_Lines are attributed when normalized final PR additions match captured AI edit hashes._"
+    )
+
     return f"""{COMMENT_MARKER}
-## AI PR Attribution
+{heading}
 
 | Metric | Value |
 | --- | ---: |
@@ -55,7 +62,7 @@ def render_markdown(summary: AttributionSummary, attributions: list[LineAttribut
 | --- | ---: | ---: | ---: |
 {file_rows}
 
-_Hash-only MVP. Lines are attributed when normalized final PR additions match captured AI edit hashes._
+{footer}
 """
 
 

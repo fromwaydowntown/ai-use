@@ -51,6 +51,8 @@ def main(argv: list[str] | None = None) -> int:
     analyze.add_argument("--format", choices=["markdown", "json"], default="markdown")
     analyze.add_argument("--output", type=Path)
     analyze.add_argument("--post-comment", action="store_true")
+    analyze.add_argument("--final", action="store_true",
+                         help="Mark this as the final score (posted at merge time).")
     analyze.add_argument("--collector-url")
     analyze.add_argument("--collector-token")
     analyze.add_argument("--commit-sha")
@@ -198,7 +200,7 @@ def _analyze(args: argparse.Namespace) -> int:
         print(output)
 
     if args.post_comment:
-        upsert_pr_comment(render_markdown(summary, attributions))
+        upsert_pr_comment(render_markdown(summary, attributions, final=getattr(args, "final", False)))
     return 0
 
 
