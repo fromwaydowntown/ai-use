@@ -35,13 +35,18 @@ jobs:
             --output .ai-pr-attribution/fetched-events.ndjson \
             --github-native || true
 
+      - name: Download PR diff
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr diff ${{ github.event.pull_request.number }} > pr.diff
+
       - name: Post attribution comment
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ai-pr-attribution analyze-pr \
             --repo . \
-            --diff-url "${{ github.event.pull_request.diff_url }}" \
+            --diff-file pr.diff \
             --commit-sha "${{ github.event.pull_request.head.sha }}" \
             --events-file .ai-pr-attribution/fetched-events.ndjson \
             --post-comment
