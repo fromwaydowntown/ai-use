@@ -11,10 +11,11 @@ from ai_pr_attribution.hashing import hash_lines
 from ai_pr_attribution.schema import AiCodeChunk, ToolName
 
 
-TEXT_KEYS = ("text", "content", "generated_text", "output", "diff")
+TEXT_KEYS = ("text", "content", "new_string", "generated_text", "output", "diff")
 FILE_KEYS = ("file_path", "path", "uri", "target_file")
 RAW_CONTENT_KEYS = set(TEXT_KEYS) | {
     "edits",
+    "old_string",
     "tool_input",
     "tool_response",
     "structuredPatch",
