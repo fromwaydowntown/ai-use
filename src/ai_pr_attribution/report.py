@@ -23,40 +23,28 @@ def summary_to_json(summary: AttributionSummary) -> str:
     )
 
 
-def render_markdown(summary: AttributionSummary, attributions: list[LineAttribution]) -> str:
-    rows = [
-        ("Total added lines", str(summary.total_added_lines)),
-        ("AI-attributed lines", str(summary.attributed_lines)),
-        ("AI attribution", f"{summary.attribution_percent:.2f}%"),
-        ("Exact file matches", str(summary.exact_file_match)),
-        ("Cross-file matches", str(summary.cross_file_match)),
-        ("Unknown / human lines", str(summary.unmatched)),
-    ]
-    table = "\n".join(f"| {name} | {value} |" for name, value in rows)
-    tool_rows = "\n".join(f"| {tool} | {count} |" for tool, count in summary.by_tool.items()) or "| none | 0 |"
-    files = _file_breakdown(attributions)
-    file_rows = "\n".join(
-        f"| {file_path} | {values['total']} | {values['attributed']} | {values['percent']:.2f}% |"
-        for file_path, values in files.items()
-    ) or "| none | 0 | 0 | 0.00% |"
+TOOL_LABELS = {"claude_code": "Claude Code", "cursor": "Cursor", "codex": "Codex"}
+
+
+def render_markdown(summary: AttributionSummary, attributions: list[LineAttribution], final: bool = False) -> str:
+    pct = summary.attribution_percent
+    bar = _mini_bar(pct)
+    status = "✓ Final" if final else "·"
+
+    tools = " · ".join(
+        f"{TOOL_LABELS.get(tool, tool)}: {count}L"
+        for tool, count in summary.by_tool.items()
+        if count > 0
+    ) or "no matches"
 
     return f"""{COMMENT_MARKER}
-## AI PR Attribution
-
-| Metric | Value |
-| --- | ---: |
-{table}
-
-| Tool | Attributed lines |
-| --- | ---: |
-{tool_rows}
-
-| File | Added lines | AI-attributed | AI % |
-| --- | ---: | ---: | ---: |
-{file_rows}
-
-_Hash-only MVP. Lines are attributed when normalized final PR additions match captured AI edit hashes._
+**AI attribution** {status} {bar} **{pct:.0f}%** AI &nbsp;·&nbsp; {summary.attributed_lines}/{summary.total_added_lines} lines &nbsp;·&nbsp; {tools}
 """
+
+
+def _mini_bar(pct: float) -> str:
+    filled = round(pct / 10)
+    return "`" + "█" * filled + "░" * (10 - filled) + "`"
 
 
 def _file_breakdown(attributions: list[LineAttribution]) -> dict[str, dict[str, float]]:
