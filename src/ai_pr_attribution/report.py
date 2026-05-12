@@ -42,6 +42,59 @@ def render_markdown(summary: AttributionSummary, attributions: list[LineAttribut
 """
 
 
+def render_check_run(summary: AttributionSummary, attributions: list[LineAttribution], final: bool = False) -> tuple[str, str]:
+    """Return (title, summary_markdown) for a GitHub Check Run.
+
+    The title is one short line (shown collapsed). The summary is full markdown
+    with per-tool breakdown, per-file breakdown, and a confidence breakdown.
+    """
+    pct = summary.attribution_percent
+    label = "Final" if final else "Preview"
+
+    tool_summary = ", ".join(
+        f"{TOOL_LABELS.get(tool, tool)} {count}L"
+        for tool, count in summary.by_tool.items()
+        if count > 0
+    ) or "no AI matches"
+
+    title = f"{label}: {pct:.0f}% AI ({summary.attributed_lines}/{summary.total_added_lines} lines) · {tool_summary}"
+
+    bar = _mini_bar(pct)
+    tool_rows = "\n".join(
+        f"| {TOOL_LABELS.get(tool, tool)} | {count} |"
+        for tool, count in sorted(summary.by_tool.items(), key=lambda kv: -kv[1])
+        if count > 0
+    ) or "| _none_ | 0 |"
+
+    files = _file_breakdown(attributions)
+    file_rows = "\n".join(
+        f"| `{path}` | {int(v['attributed'])}/{int(v['total'])} | {v['percent']:.0f}% |"
+        for path, v in files.items()
+    ) or "| _none_ | 0/0 | 0% |"
+
+    return title, f"""## {bar} **{pct:.0f}%** AI
+
+**{summary.attributed_lines}** of **{summary.total_added_lines}** added lines attributed to AI.
+
+### By tool
+| Tool | Lines |
+|---|---|
+{tool_rows}
+
+### By file
+| File | AI / Total | % |
+|---|---|---|
+{file_rows}
+
+### Confidence
+- Exact file match: **{summary.exact_file_match}**
+- Cross-file match: **{summary.cross_file_match}**
+- Unmatched (human-written): **{summary.unmatched}**
+
+<sub>{COMMENT_MARKER}</sub>
+"""
+
+
 def _mini_bar(pct: float) -> str:
     filled = round(pct / 10)
     return "`" + "█" * filled + "░" * (10 - filled) + "`"

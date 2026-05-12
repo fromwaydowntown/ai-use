@@ -14,10 +14,10 @@ from ai_pr_attribution.dashboard import serve_dashboard
 from ai_pr_attribution.diff_parser import parse_unified_diff
 from ai_pr_attribution.events import DEFAULT_EVENTS_PATH, append_chunk, read_chunks
 from ai_pr_attribution.git_utils import repo_id
-from ai_pr_attribution.github import upsert_pr_comment
+from ai_pr_attribution.github import upsert_check_run, upsert_pr_comment
 from ai_pr_attribution.installer import install_all, install_github_native, install_hooks
 from ai_pr_attribution.matcher import attribute_lines, summarize
-from ai_pr_attribution.report import render_markdown, summary_to_json
+from ai_pr_attribution.report import render_check_run, render_markdown, summary_to_json
 from ai_pr_attribution.schema import ToolName
 from ai_pr_attribution.telemetry_client import fetch_telemetry, upload_telemetry
 
@@ -50,7 +50,10 @@ def main(argv: list[str] | None = None) -> int:
     analyze.add_argument("--events-file", type=Path)
     analyze.add_argument("--format", choices=["markdown", "json"], default="markdown")
     analyze.add_argument("--output", type=Path)
-    analyze.add_argument("--post-comment", action="store_true")
+    analyze.add_argument("--post-comment", action="store_true",
+                         help="Post a PR comment (deprecated — use --post-check).")
+    analyze.add_argument("--post-check", action="store_true",
+                         help="Post a GitHub Check Run with the attribution result.")
     analyze.add_argument("--final", action="store_true",
                          help="Mark this as the final score (posted at merge time).")
     analyze.add_argument("--collector-url")
@@ -241,8 +244,14 @@ def _analyze(args: argparse.Namespace) -> int:
     else:
         print(output)
 
+    final = getattr(args, "final", False)
+    if args.post_check:
+        if not args.commit_sha:
+            raise SystemExit("--post-check requires --commit-sha")
+        title, body = render_check_run(summary, attributions, final=final)
+        upsert_check_run(args.commit_sha, title, body)
     if args.post_comment:
-        upsert_pr_comment(render_markdown(summary, attributions, final=getattr(args, "final", False)))
+        upsert_pr_comment(render_markdown(summary, attributions, final=final))
     return 0
 
 
