@@ -61,7 +61,7 @@ Two scores per PR:
 One command per repo. Uses your existing git credentials — no tokens or secrets needed.
 
 ```bash
-pip install ai-pr-attribution && ai-pr-attribution install --repo . --github-native --commit
+pip install ai-pr-attribution && ai-pr-attribution install --commit
 ```
 
 That's it. Every PR gets a comment. Every merge updates the score.
