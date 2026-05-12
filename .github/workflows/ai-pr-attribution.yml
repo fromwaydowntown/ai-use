@@ -25,7 +25,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install attribution CLI
-        run: pip install "git+https://github.com/fromwaydowntown/ai-pr-attribution.git"
+        run: pip install .
 
       - name: Collect events from all developers
         run: |
