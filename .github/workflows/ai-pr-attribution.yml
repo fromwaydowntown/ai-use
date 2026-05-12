@@ -6,8 +6,7 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write
-  issues: write
+  checks: write
 
 jobs:
   attribution:
@@ -26,7 +25,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install attribution CLI
-        run: pip install "git+https://github.com/fromwaydowntown/ai-pr-attribution.git"
+        run: pip install .
 
       - name: Collect events from all developers
         run: |
@@ -40,15 +39,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr diff ${{ github.event.pull_request.number }} > pr.diff
 
-      - name: Post attribution comment
+      - name: Post attribution check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MERGED: ${{ github.event.pull_request.merged }}
         run: |
           ai-pr-attribution analyze-pr \
             --repo . \
             --diff-file pr.diff \
             --commit-sha "${{ github.event.pull_request.head.sha }}" \
             --events-file .ai-pr-attribution/fetched-events.ndjson \
-            --post-comment \
+            --post-check \
             ${{ github.event.pull_request.merged && '--final' || '' }}
