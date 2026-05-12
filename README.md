@@ -58,10 +58,10 @@ Two scores per PR:
 
 ## Setup
 
-One command per repo. Uses your existing git credentials — no tokens or secrets needed.
+Run this from inside any git repo. No tokens or secrets needed.
 
 ```bash
-pip install ai-pr-attribution && ai-pr-attribution install --commit
+curl -sSL https://raw.githubusercontent.com/fromwaydowntown/ai-pr-attribution/main/install.sh | bash
 ```
 
 That's it. Every PR gets a comment. Every merge updates the score.
