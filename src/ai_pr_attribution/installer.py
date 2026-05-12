@@ -169,7 +169,8 @@ def install_github_native(repo: Path) -> list[Path]:
 
 
 def _cursor_hooks_config(runner: Path) -> dict:
-    command = f"AI_PR_ATTRIBUTION_TOOL=cursor {shlex.quote(str(runner))}"
+    rel = runner.name  # always collect-ai-event.sh
+    command = f'AI_PR_ATTRIBUTION_TOOL=cursor sh "$(git rev-parse --show-toplevel)/.ai-pr-attribution/hooks/{rel}"'
     return {
         "version": 1,
         "hooks": {
@@ -191,7 +192,8 @@ def _cursor_hooks_config(runner: Path) -> dict:
 
 
 def _claude_hooks_config(runner: Path) -> dict:
-    command = f"AI_PR_ATTRIBUTION_TOOL=claude_code {shlex.quote(str(runner))}"
+    rel = runner.name  # always collect-ai-event.sh
+    command = f'AI_PR_ATTRIBUTION_TOOL=claude_code sh "$(git rev-parse --show-toplevel)/.ai-pr-attribution/hooks/{rel}"'
     return {
         "hooks": {
             "PostToolUse": [{"matcher": "Edit|MultiEdit|Write", "hooks": [{"type": "command", "command": command}]}],
