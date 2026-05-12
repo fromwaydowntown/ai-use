@@ -151,8 +151,12 @@ def _install_github_native(repo: Path, commit: bool = False) -> int:
         files = [str(p) for p in created if p.exists()]
         subprocess.run(["git", "-C", str(repo), "add"] + files, check=True)
         subprocess.run(["git", "-C", str(repo), "commit", "-m", "chore: add AI PR attribution hooks and workflow"], check=True)
-        subprocess.run(["git", "-C", str(repo), "push"], check=True)
-        print("\nCommitted and pushed.")
+        result = subprocess.run(["git", "-C", str(repo), "push"], capture_output=True)
+        if result.returncode == 0:
+            print("\nCommitted and pushed.")
+        else:
+            print("\nCommitted. Push manually when your remote is configured:")
+            print("  git push")
     else:
         print("\nCommit and push to activate:")
         print("  git add .ai-pr-attribution .github/workflows/ai-pr-attribution.yml .cursor .claude")
