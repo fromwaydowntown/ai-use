@@ -58,23 +58,13 @@ Two scores per PR:
 
 ## Setup
 
-One command per repo. Uses your existing `gh` auth — no tokens or secrets needed.
+One command per repo. Uses your existing git credentials — no tokens or secrets needed.
 
 ```bash
-pip install ai-pr-attribution
-ai-pr-attribution install --repo . --github-native
+pip install ai-pr-attribution && ai-pr-attribution install --repo . --github-native --commit
 ```
 
-Add the workflow:
-
-```bash
-cp .github/workflows/ai-pr-attribution.yml your-repo/.github/workflows/
-git add .github/workflows/ai-pr-attribution.yml
-git commit -m "add AI attribution workflow"
-git push
-```
-
-Every PR gets a comment. Every merge updates the score.
+That's it. Every PR gets a comment. Every merge updates the score.
 
 ---
 

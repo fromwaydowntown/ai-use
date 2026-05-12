@@ -32,6 +32,8 @@ def main(argv: list[str] | None = None) -> int:
     install.add_argument("--collector-token")
     install.add_argument("--github-native", action="store_true",
                          help="Upload events via git push (no secrets required).")
+    install.add_argument("--commit", action="store_true",
+                         help="Commit and push installed files automatically.")
 
     install_hooks_parser = subparsers.add_parser("install-hooks", help="Backward-compatible alias for install.")
     install_hooks_parser.add_argument("--repo", type=Path, default=Path.cwd())
@@ -101,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "install":
         if args.github_native:
-            return _install_github_native(args.repo)
+            return _install_github_native(args.repo, commit=args.commit)
         return _install(args.repo, args.collector_url, args.collector_token)
     if args.command == "install-hooks":
         return _install(args.repo, args.collector_url, args.collector_token)
@@ -140,15 +142,24 @@ def _install(repo: Path, collector_url: str | None, collector_token: str | None)
     return 0
 
 
-def _install_github_native(repo: Path) -> int:
+def _install_github_native(repo: Path, commit: bool = False) -> int:
+    import subprocess
     created = install_github_native(repo)
-    print("AI attribution installed (github-native mode).")
+    print("AI attribution installed.")
     for path in created:
         print(f"  {path}")
-    print("\nOn every git push, events will be uploaded to refs/ai-attribution/<you> in the remote.")
-    print("No secrets or external services required.")
-    print("\nCommit the workflow file to enable PR comments:")
-    print("  .github/workflows/ai-pr-attribution.yml")
+    if commit:
+        repo = repo.resolve()
+        files = [str(p) for p in created if p.exists()]
+        subprocess.run(["git", "-C", str(repo), "add"] + files, check=True)
+        subprocess.run(["git", "-C", str(repo), "commit", "-m", "chore: add AI PR attribution hooks and workflow"], check=True)
+        subprocess.run(["git", "-C", str(repo), "push"], check=True)
+        print("\nCommitted and pushed.")
+    else:
+        print("\nCommit and push to activate:")
+        print("  git add .ai-pr-attribution .github/workflows/ai-pr-attribution.yml .cursor .claude")
+        print("  git commit -m 'chore: add AI PR attribution'")
+        print("  git push")
     return 0
 
 
