@@ -98,6 +98,14 @@ def main(argv: list[str] | None = None) -> int:
     dashboard.add_argument("--port", type=int, default=8787)
     dashboard.add_argument("--events-file", type=Path)
 
+    render_dash = subparsers.add_parser("render-dashboard",
+                                        help="Render the project-wide dashboard as markdown.")
+    render_dash.add_argument("--repo", type=Path, default=Path.cwd())
+    render_dash.add_argument("--events-file", type=Path)
+    render_dash.add_argument("--output", type=Path, default=Path("docs/AI_USAGE.md"))
+    render_dash.add_argument("--github-native", action="store_true",
+                             help="Fetch events from refs/ai-attribution/* before rendering.")
+
     args = parser.parse_args(argv)
     if args.command == "install":
         if args.collector_url or args.collector_token:
@@ -123,7 +131,28 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "dashboard":
         serve_dashboard(args.repo, args.host, args.port, args.events_file)
         return 0
+    if args.command == "render-dashboard":
+        return _render_dashboard(args)
     raise AssertionError(args.command)
+
+
+def _render_dashboard(args) -> int:
+    from ai_pr_attribution.dashboard_markdown import render_dashboard_markdown
+    repo = args.repo.resolve()
+    events_file = args.events_file or repo / DEFAULT_EVENTS_PATH
+
+    if getattr(args, "github_native", False):
+        from ai_pr_attribution.github_native import download_events
+        fetched = repo / ".ai-pr-attribution/fetched-events.ndjson"
+        download_events(fetched, repo)
+        events_file = fetched
+
+    markdown = render_dashboard_markdown(events_file)
+    output = args.output if args.output.is_absolute() else repo / args.output
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(markdown, encoding="utf-8")
+    print(f"Wrote {output}")
+    return 0
 
 
 def _install(repo: Path, collector_url: str | None, collector_token: str | None) -> int:
