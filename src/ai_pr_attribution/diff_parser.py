@@ -7,6 +7,14 @@ from ai_pr_attribution.schema import AddedLine
 
 HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 
+# Paths added by the installer itself — exclude from attribution analysis
+_INSTALLER_PATHS = (
+    ".ai-pr-attribution/",
+    ".github/workflows/ai-pr-attribution.yml",
+    ".claude/settings.json",
+    ".cursor/hooks.json",
+)
+
 
 def parse_unified_diff(diff_text: str) -> list[AddedLine]:
     added: list[AddedLine] = []
@@ -19,8 +27,8 @@ def parse_unified_diff(diff_text: str) -> list[AddedLine]:
             new_lineno = None
             continue
         if raw_line.startswith("+++ "):
-            path = raw_line[4:].strip()
-            current_file = _clean_diff_path(path)
+            path = _clean_diff_path(raw_line[4:].strip())
+            current_file = None if any(path.startswith(p) for p in _INSTALLER_PATHS) else path
             continue
         hunk = HUNK_RE.match(raw_line)
         if hunk:
