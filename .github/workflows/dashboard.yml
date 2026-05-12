@@ -1,0 +1,48 @@
+name: AI Usage Dashboard
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * *"  # daily refresh in case of stale data
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dashboard
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch attribution refs
+        run: git fetch origin '+refs/ai-attribution/*:refs/ai-attribution/*' || true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install attribution CLI
+        run: pip install .
+
+      - name: Render dashboard
+        run: ai-pr-attribution render-dashboard --repo . --github-native --output docs/AI_USAGE.md
+
+      - name: Commit updated dashboard
+        run: |
+          if git diff --quiet docs/AI_USAGE.md; then
+            echo "No dashboard changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/AI_USAGE.md
+          git commit -m "docs: refresh AI usage dashboard [skip ci]"
+          git push

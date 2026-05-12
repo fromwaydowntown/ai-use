@@ -166,17 +166,17 @@ def install_github_native(repo: Path) -> list[Path]:
     for git_hook in _install_git_hooks(repo, codex_importer, uploader):
         created.append(git_hook)
 
-    workflow_dest = _install_workflow(repo)
-    created.append(workflow_dest)
+    created.append(_install_workflow_file(repo, "workflow.yml", "ai-pr-attribution.yml"))
+    created.append(_install_workflow_file(repo, "dashboard_workflow.yml", "ai-pr-attribution-dashboard.yml"))
 
     return created
 
 
-def _install_workflow(repo: Path) -> Path:
+def _install_workflow_file(repo: Path, src_name: str, dest_name: str) -> Path:
     workflow_dir = repo / ".github" / "workflows"
     workflow_dir.mkdir(parents=True, exist_ok=True)
-    dest = workflow_dir / "ai-pr-attribution.yml"
-    pkg = importlib.resources.files("ai_pr_attribution") / "data" / "workflow.yml"
+    dest = workflow_dir / dest_name
+    pkg = importlib.resources.files("ai_pr_attribution") / "data" / src_name
     dest.write_bytes(pkg.read_bytes())
     return dest
 
