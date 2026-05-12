@@ -28,12 +28,10 @@ def main(argv: list[str] | None = None) -> int:
 
     install = subparsers.add_parser("install", help="Install collection hooks for this repo.")
     install.add_argument("--repo", type=Path, default=Path.cwd())
-    install.add_argument("--collector-url")
-    install.add_argument("--collector-token")
-    install.add_argument("--github-native", action="store_true",
-                         help="Upload events via git push (no secrets required).")
     install.add_argument("--commit", action="store_true",
                          help="Commit and push installed files automatically.")
+    install.add_argument("--collector-url", help=argparse.SUPPRESS)
+    install.add_argument("--collector-token", help=argparse.SUPPRESS)
 
     install_hooks_parser = subparsers.add_parser("install-hooks", help="Backward-compatible alias for install.")
     install_hooks_parser.add_argument("--repo", type=Path, default=Path.cwd())
@@ -102,9 +100,9 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     if args.command == "install":
-        if args.github_native:
-            return _install_github_native(args.repo, commit=args.commit)
-        return _install(args.repo, args.collector_url, args.collector_token)
+        if args.collector_url or args.collector_token:
+            return _install(args.repo, args.collector_url, args.collector_token)
+        return _install_github_native(args.repo, commit=args.commit)
     if args.command == "install-hooks":
         return _install(args.repo, args.collector_url, args.collector_token)
     if args.command == "collect-hook":
