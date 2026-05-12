@@ -150,7 +150,7 @@ def _render_dashboard(args) -> int:
         download_events(fetched, repo)
         events_file = fetched
 
-    markdown = render_dashboard_markdown(events_file)
+    markdown = render_dashboard_markdown(events_file, repo=repo)
     output = args.output if args.output.is_absolute() else repo / args.output
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(markdown, encoding="utf-8")
