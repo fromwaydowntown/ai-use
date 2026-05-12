@@ -1,102 +1,98 @@
-# AI PR Attribution MVP
+# AI PR Attribution
 
-GitHub-first attribution for AI-generated code from Cursor, Claude Code, and Codex.
+You're spending on AI tooling. Are developers actually using it? Is it shipping?
 
-The MVP captures local AI edit evidence as normalized line hashes, compares those hashes to final added lines in a pull request diff, and posts a sticky GitHub PR comment with attribution metrics.
+Most teams can't answer that. Billing dashboards show token spend. They don't show how much of that output survives code review and lands in `main`.
 
-## Install for Development
+**AI PR Attribution tracks the percentage of shipped lines that came from AI — per PR, per developer, over time.**
 
-```bash
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -e ".[test]"
+```
+AI attribution · `██████░░░░` 61% AI · 49/80 lines
 ```
 
-## One-Command Repo Install
+No servers. No secrets. Hashes only — no code leaves your repo.
 
-From a repository where engineers write code:
+---
 
-```bash
-ai-pr-attribution install --repo .
+## Why it matters
+
+AI tooling is a real budget line. Seat costs, token limits, enterprise plans — it adds up. But adoption is invisible. A developer can have Claude Code open all day and still write everything by hand. You'd never know.
+
+Attribution gives you a trend:
+
+```
+Jan  ██░░░░░░░░  22%   ← rolled out Claude Code
+Feb  ████░░░░░░  38%   ← raised token limits  
+Mar  ██████░░░░  61%   ← added to onboarding
+Apr  ████████░░  79%   ← workflow settled
 ```
 
-This installs local collection once:
+Flat or dropping? Something's broken in the workflow — wrong tool, wrong limits, not enough training. Rising? Your investment is landing.
 
-- Cursor hook config in `.cursor/hooks.json`.
-- Claude Code hook config in `.claude/settings.json`.
-- A Git `pre-commit` hook that imports Codex Desktop session edits automatically.
-- Hash-only local storage in `.ai-pr-attribution/events.ndjson`.
+That's the number you bring to a planning meeting.
 
-After this, engineers keep using Cursor, Claude Code, Codex, and Git normally.
+---
 
-For PR metrics, point the repo at a collector once:
+## How it works
 
-```bash
-ai-pr-attribution install --repo . --collector-url https://collector.example
+```
+  AI writes code  →  local hook captures line hashes (no raw code)
+        │
+        ▼
+  git push  →  hashes uploaded to refs/ai-attribution/<you>
+  (one ref per developer, no conflicts, uses existing git auth)
+        │
+        ▼
+  PR opened  →  GitHub Action diffs PR, matches hashes, posts comment
+        │
+        ▼
+  PR merged  →  ✓ Final score against what actually shipped
+               (lines rewritten in review don't count)
 ```
 
-Then `git push` uploads hash-only telemetry outside the PR diff. No telemetry file
-is committed and no extra Git refs are created.
+Two scores per PR:
+- **On open** — how much AI went into this at review time
+- **On merge** — confirmed: how much AI actually shipped
 
-For local collector testing:
+---
 
-```bash
-ai-pr-attribution serve-collector --host 127.0.0.1 --port 8765
-ai-pr-attribution install --repo . --collector-url http://127.0.0.1:8765
-```
+## Setup
 
-## Capture Hook Events
-
-Adapters call the collector with JSON on stdin:
+One command per repo. Uses your existing `gh` auth — no tokens or secrets needed.
 
 ```bash
-echo '{"tool":"cursor","file_path":"app.py","text":"print(\"hello\")"}' \
-  | ai-pr-attribution collect-hook --tool cursor --repo .
+pip install ai-pr-attribution
+ai-pr-attribution install --repo . --github-native
 ```
 
-The collector stores hash-only NDJSON in `.ai-pr-attribution/events.ndjson`.
-
-## Import Codex App Session Events
-
-Codex Desktop records local session JSONL files. The one-command installer imports
-Codex patch events automatically before commits. To import manually:
+Add the workflow:
 
 ```bash
-ai-pr-attribution import-codex-session --repo .
+cp .github/workflows/ai-pr-attribution.yml your-repo/.github/workflows/
+git add .github/workflows/ai-pr-attribution.yml
+git commit -m "add AI attribution workflow"
+git push
 ```
 
-This imports added lines from local Codex patch events as hash-only chunks.
+Every PR gets a comment. Every merge updates the score.
 
-## Local Dashboard
+---
 
-Run a local dashboard for current repo usage:
+## Dashboard
 
 ```bash
 ai-pr-attribution dashboard --repo .
+# open http://127.0.0.1:8787
 ```
 
-Open `http://127.0.0.1:8787` to see AI edit events, AI lines captured, tool breakdown,
-top files, and recent events. The page reads local hash-only telemetry and
-refreshes automatically.
+Attribution trend over time, per developer, per branch. The number to track when you're trying to move it.
 
-## Analyze a PR Diff
+---
+
+## Development
 
 ```bash
-ai-pr-attribution analyze-pr \
-  --repo . \
-  --diff-file ./pr.diff \
-  --events-file ./.ai-pr-attribution/events.ndjson
+python3 -m venv .venv && . .venv/bin/activate
+pip install -e ".[test]"
+pytest
 ```
-
-## GitHub Action
-
-Copy `.github/workflows/ai-pr-attribution.yml` into a repository and configure
-these secrets:
-
-- `AI_ATTRIBUTION_COLLECTOR_URL`
-- `AI_ATTRIBUTION_COLLECTOR_TOKEN` if the collector requires one.
-
-On pull requests, the Action fetches the PR diff, downloads hash-only telemetry
-for the PR head SHA from the collector, runs the matcher, and updates one sticky
-PR comment.
-# Self-test

@@ -7,7 +7,7 @@ Codex session patch events before each commit.
 Manual collection is also available:
 
 ```bash
-AI_PR_ATTRIBUTION_TOOL=codex '/Users/ilia.savin/Documents/New project 2/.ai-pr-attribution/hooks/collect-ai-event.sh'
+AI_PR_ATTRIBUTION_TOOL=codex '/path/to/your/repo/.ai-pr-attribution/hooks/collect-ai-event.sh'
 ```
 
 The collector stores hash-only evidence in `.ai-pr-attribution/events.ndjson`.
