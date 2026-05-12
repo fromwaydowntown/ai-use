@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.resources
 import json
 import shlex
 import stat
@@ -165,7 +166,19 @@ def install_github_native(repo: Path) -> list[Path]:
     for git_hook in _install_git_hooks(repo, codex_importer, uploader):
         created.append(git_hook)
 
+    workflow_dest = _install_workflow(repo)
+    created.append(workflow_dest)
+
     return created
+
+
+def _install_workflow(repo: Path) -> Path:
+    workflow_dir = repo / ".github" / "workflows"
+    workflow_dir.mkdir(parents=True, exist_ok=True)
+    dest = workflow_dir / "ai-pr-attribution.yml"
+    pkg = importlib.resources.files("ai_pr_attribution") / "data" / "workflow.yml"
+    dest.write_bytes(pkg.read_bytes())
+    return dest
 
 
 def _cursor_hooks_config(runner: Path) -> dict:
@@ -203,16 +216,17 @@ def _claude_hooks_config(runner: Path) -> dict:
 
 
 def _codex_instructions(runner: Path) -> str:
+    rel = f'.ai-pr-attribution/hooks/{runner.name}'
     return f"""# Codex Hook Adapter
 
 Codex Desktop does not currently expose the same repo hook file shape as Cursor
 or Claude Code. The installer adds a Git `pre-commit` hook that imports local
 Codex session patch events before each commit.
 
-Manual collection is also available:
+Manual collection is also available (run from repo root):
 
 ```bash
-AI_PR_ATTRIBUTION_TOOL=codex {shlex.quote(str(runner))}
+AI_PR_ATTRIBUTION_TOOL=codex sh {shlex.quote(rel)}
 ```
 
 The collector stores hash-only evidence in `.ai-pr-attribution/events.ndjson`.
