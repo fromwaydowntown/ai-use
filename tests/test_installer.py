@@ -11,8 +11,8 @@ def test_install_hooks_quotes_paths_with_spaces(tmp_path):
     created = install_hooks(repo)
     cursor_config = json.loads((repo / ".cursor" / "hooks.json").read_text(encoding="utf-8"))
     command = cursor_config["hooks"]["afterFileEdit"][0]["command"]
-    parsed = shlex.split(command)
-    assert parsed[-1] == str(repo / ".ai-pr-attribution" / "hooks" / "collect-ai-event.sh")
+    # hooks use $(git rev-parse --show-toplevel) so the path is dynamic, not absolute
+    assert ".ai-pr-attribution/hooks/collect-ai-event.sh" in command
     assert repo / ".ai-pr-attribution" / "hooks" / "collect-ai-event.sh" in created
 
 

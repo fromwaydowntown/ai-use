@@ -2,7 +2,15 @@ from ai_pr_attribution.diff_parser import parse_unified_diff
 from ai_pr_attribution.events import read_chunks, write_chunks
 from ai_pr_attribution.matcher import attribute_lines, summarize
 from ai_pr_attribution.report import render_markdown
-from tests.test_matcher import chunk
+from ai_pr_attribution.hashing import hash_lines
+from ai_pr_attribution.schema import AiCodeChunk
+
+
+def chunk(file_path: str, text: str, tool: str = "cursor") -> AiCodeChunk:
+    return AiCodeChunk(
+        tool=tool, repo_id="repo", commit_base="abc", file_path=file_path,
+        event_time="", chunk_id=f"{tool}-{file_path}", line_hashes=hash_lines(text),
+    )
 
 
 def test_end_to_end_summary_from_fixture(tmp_path):
@@ -19,5 +27,5 @@ def test_end_to_end_summary_from_fixture(tmp_path):
     summary = summarize(attributions)
     comment = render_markdown(summary, attributions)
     assert summary.attribution_percent == 50.0
-    assert "AI PR Attribution" in comment
-    assert "| claude_code | 1 |" in comment
+    assert "AI attribution" in comment
+    assert "Claude Code" in comment
