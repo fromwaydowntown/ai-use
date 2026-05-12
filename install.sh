@@ -15,5 +15,5 @@ if ! command -v python3 &>/dev/null; then
 fi
 
 python3 -m venv "$VENV"
-"$VENV/bin/pip" install --quiet "git+$REPO.git"
+"$VENV/bin/pip" install --quiet --force-reinstall "git+$REPO.git"
 "$VENV/bin/ai-pr-attribution" install --commit
