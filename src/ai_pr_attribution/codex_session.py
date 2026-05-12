@@ -68,6 +68,8 @@ def _chunks_from_event(event: dict[str, Any], session_file: Path, repo: Path) ->
         if not added_text:
             continue
         file_path = _repo_relative_path(raw_path, repo)
+        if file_path is None:
+            continue
         chunks.append(
             AiCodeChunk(
                 tool="codex",
@@ -99,12 +101,12 @@ def _added_lines_from_fragment(diff: str) -> list[str]:
     return lines
 
 
-def _repo_relative_path(raw_path: str, repo: Path) -> str:
+def _repo_relative_path(raw_path: str, repo: Path) -> str | None:
     path = Path(raw_path)
     try:
         return path.resolve().relative_to(repo).as_posix()
     except (OSError, ValueError):
-        return raw_path.replace(os.sep, "/")
+        return None
 
 
 def _stable_chunk_id(session_file: Path, payload: dict[str, Any], file_path: str, diff: str) -> str:
