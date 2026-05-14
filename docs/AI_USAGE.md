@@ -1,15 +1,15 @@
 # AI Usage
 
 <!-- ai-pr-attribution:dashboard -->
-_Last updated: 2026-05-13 08:34 UTC_
+_Last updated: 2026-05-14 08:28 UTC_
 
 ## At a glance
 
 | | |
 |---|---|
 | **AI share this week** | **100%** &nbsp; <sub>↑ 100 pts vs last week</sub> |
-| **AI lines this week** | 5,045 of 5,062 added |
-| **AI lines last 12 weeks** | 5,045 |
+| **AI lines this week** | 5,335 of 5,064 added |
+| **AI lines last 12 weeks** | 5,335 |
 | **Active tools this week** | Claude Code, Codex, Cursor |
 
 ## AI share over time
@@ -31,7 +31,7 @@ xychart-beta
     title "Claude Code — AI lines per week"
     x-axis ["W09", "W10", "W11", "W12", "W13", "W14", "W15", "W16", "W17", "W18", "W19", "W20"]
     y-axis "Lines"
-    bar [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3682]
+    bar [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3972]
 ```
 
 ### Codex
@@ -58,8 +58,8 @@ xychart-beta
 
 | Tool | Lines | Share |
 |---|---:|---:|
-| Claude Code | 3,682 | 73% |
-| Codex | 1,360 | 27% |
+| Claude Code | 3,972 | 74% |
+| Codex | 1,360 | 25% |
 | Cursor | 3 | 0% |
 
 ---
