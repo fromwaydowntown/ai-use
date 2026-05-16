@@ -2,27 +2,37 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 
+from ai_pr_attribution.hashing import NULL_HASH
 from ai_pr_attribution.schema import AddedLine, AiCodeChunk, AttributionSummary, LineAttribution
 
 
 def attribute_lines(added_lines: list[AddedLine], chunks: list[AiCodeChunk]) -> list[LineAttribution]:
+    """Attribute each added line to an AI chunk, or mark it unmatched.
+
+    Attribution is by exact (file_path, line_hash) match only. Cross-file
+    matching was removed because it produced too many false-positives on
+    common boilerplate — e.g., one AI user's `import json` would cause every
+    PR's `import json` line in any file to be attributed to them.
+
+    Lines whose hash is NULL_HASH (too short to hash reliably — blank lines,
+    single punctuation, short keywords) are always reported as unattributed.
+    """
     by_file_hash: dict[tuple[str, str], AiCodeChunk] = {}
-    by_hash: dict[str, AiCodeChunk] = {}
 
     for chunk in chunks:
         for line_hash in chunk.line_hashes:
+            if line_hash == NULL_HASH:
+                continue
             by_file_hash.setdefault((chunk.file_path, line_hash), chunk)
-            by_hash.setdefault(line_hash, chunk)
 
     results: list[LineAttribution] = []
     for line in added_lines:
+        if line.line_hash == NULL_HASH:
+            results.append(LineAttribution(line=line, confidence="unmatched"))
+            continue
         exact = by_file_hash.get((line.file_path, line.line_hash))
         if exact:
             results.append(LineAttribution(line=line, confidence="exact_file_match", chunk_id=exact.chunk_id, tool=exact.tool))
-            continue
-        cross = by_hash.get(line.line_hash)
-        if cross:
-            results.append(LineAttribution(line=line, confidence="cross_file_match", chunk_id=cross.chunk_id, tool=cross.tool))
             continue
         results.append(LineAttribution(line=line, confidence="unmatched"))
     return results

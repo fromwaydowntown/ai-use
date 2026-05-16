@@ -42,7 +42,7 @@ def test_install_with_collector_uses_classic_mode(tmp_path):
 
 def test_collect_hook_writes_event(tmp_path, monkeypatch):
     repo = tmp_path
-    payload = json.dumps({"file_path": "a.py", "text": "x = 1"})
+    payload = json.dumps({"file_path": "a.py", "text": "x = 1 + 2 + 3"})
     monkeypatch.setattr("sys.stdin", _Stdin(payload))
     events_file = repo / "events.ndjson"
     assert main([
@@ -63,13 +63,13 @@ def test_analyze_pr_emits_markdown(tmp_path, capsys, monkeypatch):
 --- /dev/null
 +++ b/a.py
 @@ -0,0 +1,1 @@
-+x = 1
++x = 1 + 2 + 3
 """)
     events = tmp_path / "events.ndjson"
     events.write_text(json.dumps({
         "tool": "cursor", "repo_id": "r", "commit_base": "c",
         "file_path": "a.py", "event_time": "", "chunk_id": "c1",
-        "line_hashes": [_hash_line("x = 1")], "metadata": {},
+        "line_hashes": [_hash_line("x = 1 + 2 + 3")], "metadata": {},
     }) + "\n")
 
     rc = main([

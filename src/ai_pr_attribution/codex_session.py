@@ -102,9 +102,27 @@ def _added_lines_from_fragment(diff: str) -> list[str]:
 
 
 def _repo_relative_path(raw_path: str, repo: Path) -> str | None:
+    """Resolve a Codex-reported file path into a repo-relative path, or None.
+
+    Returns None for any of:
+    - Absolute paths that don't fall inside `repo`.
+    - Relative paths that, when resolved, escape `repo` (../../foo).
+    - Paths that resolve outside `repo` due to symlinks.
+
+    The Codex session may have been recorded against a different project on
+    the same machine. Resolving a *relative* path (like ``src/main.py``)
+    against the current process CWD would silently attribute it to whatever
+    repo happens to be the CWD — we reject that ambiguity by requiring the
+    input path to be absolute and inside `repo`.
+    """
     path = Path(raw_path)
+    if not path.is_absolute():
+        # Reject relative paths: we can't know which project they belong to.
+        return None
     try:
-        return path.resolve().relative_to(repo).as_posix()
+        resolved = path.resolve()
+        repo_resolved = repo.resolve()
+        return resolved.relative_to(repo_resolved).as_posix()
     except (OSError, ValueError):
         return None
 
