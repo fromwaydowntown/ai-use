@@ -29,27 +29,30 @@ SAMPLE_DIFF = """diff --git a/a.py b/a.py
 --- /dev/null
 +++ b/a.py
 @@ -0,0 +1,2 @@
-+ai
-+human
++def ai_written_function():
++def human_written_function():
 """
+
+# Text used as the "AI" line in chunks — must match the AI line in SAMPLE_DIFF.
+AI_TEXT = "def ai_written_function():"
 
 
 # ── markdown comment ─────────────────────────────────────────────────────────
 
 def test_markdown_marker_present():
-    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", "ai", "claude_code")])
+    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", AI_TEXT, "claude_code")])
     assert COMMENT_MARKER in render_markdown(summary, attrs)
 
 
 def test_markdown_progress_bar():
-    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", "ai", "cursor")])
+    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", AI_TEXT, "cursor")])
     comment = render_markdown(summary, attrs)
     assert "█" in comment
     assert "░" in comment
 
 
 def test_markdown_final_tag_only_on_merge():
-    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", "ai")])
+    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", AI_TEXT)])
     assert "Final" not in render_markdown(summary, attrs, final=False)
     assert "Final" in render_markdown(summary, attrs, final=True)
 
@@ -62,7 +65,7 @@ def test_markdown_no_matches_when_empty():
 
 
 def test_markdown_tool_labels_humanized():
-    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", "ai", "claude_code")])
+    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", AI_TEXT, "claude_code")])
     comment = render_markdown(summary, attrs)
     assert "Claude Code" in comment
     assert "claude_code" not in comment
@@ -71,7 +74,7 @@ def test_markdown_tool_labels_humanized():
 # ── check run ────────────────────────────────────────────────────────────────
 
 def test_check_run_title_has_pct_and_tool_summary():
-    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", "ai", "claude_code")])
+    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", AI_TEXT, "claude_code")])
     title, body = render_check_run(summary, attrs)
     assert "50% AI" in title
     assert "1/2 lines" in title
@@ -79,7 +82,7 @@ def test_check_run_title_has_pct_and_tool_summary():
 
 
 def test_check_run_summary_has_per_tool_and_per_file_tables():
-    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", "ai", "cursor")])
+    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", AI_TEXT, "cursor")])
     _, body = render_check_run(summary, attrs)
     assert "### By tool" in body
     assert "### By file" in body
@@ -89,7 +92,7 @@ def test_check_run_summary_has_per_tool_and_per_file_tables():
 
 
 def test_check_run_final_changes_label():
-    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", "ai")])
+    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", AI_TEXT)])
     title_preview, _ = render_check_run(summary, attrs, final=False)
     title_final, _ = render_check_run(summary, attrs, final=True)
     assert title_preview.startswith("Preview:")
@@ -104,7 +107,7 @@ def test_check_run_no_matches_when_empty():
 
 
 def test_check_run_marker_embedded():
-    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", "ai")])
+    summary, attrs = _summary_from(SAMPLE_DIFF, [_chunk("a.py", AI_TEXT)])
     _, body = render_check_run(summary, attrs)
     assert COMMENT_MARKER in body
 
@@ -112,7 +115,7 @@ def test_check_run_marker_embedded():
 # ── JSON summary ─────────────────────────────────────────────────────────────
 
 def test_summary_to_json_round_trip():
-    summary, _ = _summary_from(SAMPLE_DIFF, [_chunk("a.py", "ai", "codex")])
+    summary, _ = _summary_from(SAMPLE_DIFF, [_chunk("a.py", AI_TEXT, "codex")])
     payload = json.loads(summary_to_json(summary))
     assert payload["total_added_lines"] == 2
     assert payload["attributed_lines"] == 1
@@ -121,6 +124,6 @@ def test_summary_to_json_round_trip():
 
 
 def test_zero_percent_when_no_added_lines():
-    summary, attrs = _summary_from("", [_chunk("a.py", "ai")])
+    summary, attrs = _summary_from("", [_chunk("a.py", AI_TEXT)])
     comment = render_markdown(summary, attrs)
     assert "0%" in comment

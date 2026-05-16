@@ -131,13 +131,32 @@ def _first_string(payload: dict[str, Any], keys: tuple[str, ...]) -> str | None:
 
 
 def _normalize_path(path: str, repo: Path) -> str:
+    """Make a file path repo-relative, or return a safe sentinel.
+
+    - Absolute paths must be inside `repo`; otherwise we return "<external>"
+      so downstream code (e.g. the dashboard's file reader) can't be tricked
+      into accessing arbitrary system files.
+    - Relative paths are kept as-is after normalizing separators, with the
+      traversal check applied: anything containing `..` segments after
+      normalization is rejected.
+    """
     if path.startswith("file://"):
         path = path.removeprefix("file://")
-    normalized = path.replace("\\", "/")
-    try:
-        return Path(normalized).resolve().relative_to(repo.resolve()).as_posix()
-    except (OSError, ValueError):
-        return normalized
+    normalized = path.replace("\\", "/").lstrip("/")
+    candidate = Path(path.replace("\\", "/"))
+
+    if candidate.is_absolute():
+        try:
+            resolved = candidate.resolve()
+            return resolved.relative_to(repo.resolve()).as_posix()
+        except (OSError, ValueError):
+            return "<external>"
+
+    # Relative path: reject traversal (..), keep otherwise.
+    parts = Path(normalized).parts
+    if any(p == ".." for p in parts):
+        return "<external>"
+    return normalized
 
 
 def _json_safe(value: Any) -> bool:

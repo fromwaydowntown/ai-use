@@ -10,27 +10,58 @@ def _git(*args: str, cwd: Path, check: bool = True) -> subprocess.CompletedProce
     return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, check=check)
 
 
+class UserEmailMissingError(RuntimeError):
+    """Raised when git user.email is not configured.
+
+    We refuse to push attribution events under a default "unknown" identity
+    because every misconfigured machine would collapse onto the same ref and
+    silently overwrite each other's data.
+    """
+
+
 def _user_ref(repo: Path) -> str:
-    """Return a stable per-developer ref name derived from git user.email."""
+    """Return a stable per-developer ref name derived from git user.email.
+
+    Raises UserEmailMissingError if git user.email is not set, so we never
+    silently collapse multiple developers onto the same "unknown" ref.
+    Uses a 16-hex-char prefix of sha256(email) — collision probability is
+    negligible for any realistic org size.
+    """
     result = _git("config", "user.email", cwd=repo, check=False)
-    email = result.stdout.strip() or "unknown"
-    user_hash = hashlib.sha256(email.encode()).hexdigest()[:8]
+    email = result.stdout.strip()
+    if not email:
+        raise UserEmailMissingError(
+            "git user.email is not configured. Set it with:\n"
+            "  git config --global user.email you@example.com\n"
+            "Without an email, attribution events would collide with other "
+            "developers' refs and silently overwrite each other."
+        )
+    user_hash = hashlib.sha256(email.encode()).hexdigest()[:16]
     return f"refs/ai-attribution/{user_hash}"
 
 
 def upload_events(events_file: Path, repo: Path) -> int:
-    """Store events file as a git blob and push to refs/ai-attribution/<user>."""
+    """Store events file as a git blob and push to refs/ai-attribution/<user>.
+
+    Returns 0 (no-op) on any expected failure — missing file, missing
+    user.email, push rejected — without crashing the calling git hook.
+    """
     if not events_file.exists():
         return 0
     content = events_file.read_text(encoding="utf-8").strip()
     if not content:
         return 0
 
+    try:
+        ref = _user_ref(repo)
+    except UserEmailMissingError as exc:
+        print(f"ai-pr-attribution: {exc}", file=sys.stderr)
+        return 0
+
     # Write the file as a git blob object
     result = _git("hash-object", "-w", str(events_file), cwd=repo)
     blob_sha = result.stdout.strip()
 
-    ref = _user_ref(repo)
     try:
         _git("push", "origin", f"{blob_sha}:{ref}", "--force", cwd=repo)
     except subprocess.CalledProcessError as exc:

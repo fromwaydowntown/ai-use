@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import urllib.error
 import urllib.request
 
@@ -53,7 +54,6 @@ def upsert_check_run(head_sha: str, title: str, summary: str) -> None:
         "X-GitHub-Api-Version": "2022-11-28",
     }
 
-    existing = _find_existing_check_run(repo, head_sha, headers)
     body = {
         "name": CHECK_RUN_NAME,
         "head_sha": head_sha,
@@ -63,12 +63,27 @@ def upsert_check_run(head_sha: str, title: str, summary: str) -> None:
     }
     payload = json.dumps(body).encode("utf-8")
 
-    if existing:
-        url = f"https://api.github.com/repos/{repo}/check-runs/{existing['id']}"
-        _request("PATCH", url, headers, payload)
-    else:
-        url = f"https://api.github.com/repos/{repo}/check-runs"
-        _request("POST", url, headers, payload)
+    try:
+        existing = _find_existing_check_run(repo, head_sha, headers)
+        if existing:
+            url = f"https://api.github.com/repos/{repo}/check-runs/{existing['id']}"
+            _request("PATCH", url, headers, payload)
+        else:
+            url = f"https://api.github.com/repos/{repo}/check-runs"
+            _request("POST", url, headers, payload)
+    except RuntimeError as exc:
+        # Fork PRs run with a read-only GITHUB_TOKEN that lacks checks:write.
+        # Don't fail the whole workflow — just log and continue. The attribution
+        # output is still printed to stdout for anyone reading the logs.
+        message = str(exc)
+        if "403" in message or "Resource not accessible" in message:
+            print(
+                "ai-pr-attribution: skipping Check Run post — token lacks "
+                "checks:write (likely a fork PR). Attribution result above.",
+                file=sys.stderr,
+            )
+            return
+        raise
 
 
 def _find_existing_check_run(repo: str, head_sha: str, headers: dict[str, str]) -> dict | None:

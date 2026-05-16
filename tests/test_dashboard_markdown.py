@@ -111,17 +111,24 @@ def test_no_file_or_contributor_sections(tmp_path):
 
 
 def test_pct_uses_git_total_when_repo_provided(tmp_path):
+    """The dashboard should compute AI% as ai_lines / git_total_lines per week.
+
+    With the matcher fix (lines below MIN_HASHABLE_LENGTH are skipped), we
+    write longer lines so the chunk actually registers hashes.
+    """
     repo = _init_repo(tmp_path / "repo")
-    # commit 5 lines of "real" code
-    _make_commit(repo, "file.py", "a\nb\nc\nd\ne\n")
+    # 5 substantive lines actually committed to git
+    long_lines = "\n".join([f"line number {i} is here" for i in range(1, 6)])
+    _make_commit(repo, "file.py", long_lines + "\n")
 
     events = repo / "events.ndjson"
-    # AI attributed 2 of those 5 lines this week
-    write_chunks(events, [_chunk("file.py", "a\nb")])
+    # AI was responsible for 2 of those 5 lines
+    ai_lines = "\n".join([f"line number {i} is here" for i in range(1, 3)])
+    write_chunks(events, [_chunk("file.py", ai_lines)])
 
     md = render_dashboard_markdown(events, repo=repo)
-    # 2/5 = 40% — should appear somewhere in the KPI / charts
-    assert "40%" in md or "AI share" in md  # exact pct may bucket differently
+    # 2/5 = 40%. Must appear as a concrete percentage in the KPI section.
+    assert "**40%**" in md, f"Expected '**40%**' in dashboard output, got:\n{md}"
 
 
 def test_render_dashboard_cli_writes_file(tmp_path):
