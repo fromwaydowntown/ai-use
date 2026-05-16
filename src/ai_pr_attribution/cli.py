@@ -101,6 +101,22 @@ def main(argv: list[str] | None = None) -> int:
     dashboard.add_argument("--port", type=int, default=8787)
     dashboard.add_argument("--events-file", type=Path)
 
+    export_at = subparsers.add_parser(
+        "export-agent-trace",
+        help="Export events as Agent Trace NDJSON (open spec by Cursor).",
+    )
+    export_at.add_argument("--repo", type=Path, default=Path.cwd())
+    export_at.add_argument("--events-file", type=Path)
+    export_at.add_argument("--output", type=Path, default=Path(".ai-pr-attribution/agent-trace.ndjson"))
+
+    import_at = subparsers.add_parser(
+        "import-agent-trace",
+        help="Import Agent Trace NDJSON into local events.",
+    )
+    import_at.add_argument("--repo", type=Path, default=Path.cwd())
+    import_at.add_argument("--input", type=Path, required=True)
+    import_at.add_argument("--events-file", type=Path)
+
     render_dash = subparsers.add_parser("render-dashboard",
                                         help="Render the project-wide dashboard as markdown.")
     render_dash.add_argument("--repo", type=Path, default=Path.cwd())
@@ -134,9 +150,35 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "dashboard":
         serve_dashboard(args.repo, args.host, args.port, args.events_file)
         return 0
+    if args.command == "export-agent-trace":
+        return _export_agent_trace(args)
+    if args.command == "import-agent-trace":
+        return _import_agent_trace(args)
     if args.command == "render-dashboard":
         return _render_dashboard(args)
     raise AssertionError(args.command)
+
+
+def _export_agent_trace(args) -> int:
+    from ai_pr_attribution.agent_trace import export_ndjson
+    repo = args.repo.resolve()
+    events_file = args.events_file or repo / DEFAULT_EVENTS_PATH
+    chunks = read_chunks(events_file)
+    output = args.output if args.output.is_absolute() else repo / args.output
+    export_ndjson(chunks, output)
+    print(json.dumps({"exported_chunks": len(chunks), "output": str(output)}))
+    return 0
+
+
+def _import_agent_trace(args) -> int:
+    from ai_pr_attribution.agent_trace import import_ndjson
+    repo = args.repo.resolve()
+    chunks = import_ndjson(args.input)
+    target = args.events_file or repo / DEFAULT_EVENTS_PATH
+    for chunk in chunks:
+        append_chunk(target, chunk)
+    print(json.dumps({"imported_chunks": len(chunks), "events_file": str(target)}))
+    return 0
 
 
 def _render_dashboard(args) -> int:
