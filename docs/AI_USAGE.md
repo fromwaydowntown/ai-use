@@ -1,14 +1,14 @@
 # AI Usage
 
 <!-- ai-pr-attribution:dashboard -->
-_Last updated: 2026-05-16 17:14 UTC_
+_Last updated: 2026-05-17 08:10 UTC_
 
 ## At a glance
 
 | | |
 |---|---|
 | **AI share this week** | **100%** &nbsp; <sub>↑ 100 pts vs last week</sub> |
-| **AI lines this week** | 11,724 of 5,899 added |
+| **AI lines this week** | 11,724 of 5,908 added |
 | **AI lines last 12 weeks** | 11,724 |
 | **Active tools this week** | Claude Code, Codex, Cursor |
 
