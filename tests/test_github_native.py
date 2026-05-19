@@ -1,7 +1,7 @@
 """Tests for github_native: storing events as git blobs and pushing/pulling refs."""
 import subprocess
 
-from ai_pr_attribution.github_native import _user_ref, download_events, upload_events
+from ai_use.github_native import _user_ref, download_events, upload_events
 
 
 def init_repo(path, with_remote=None):

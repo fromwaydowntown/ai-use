@@ -43,7 +43,7 @@ For each developer on the pilot team:
 
 ```bash
 cd <repo>
-curl -sSL https://raw.githubusercontent.com/fromwaydowntown/ai-pr-attribution/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/fromwaydowntown/ai-use/main/install.sh | bash
 ```
 
 The installer auto-commits and pushes. Watch the team Slack for "what's this commit?" questions — pre-empt them with a note.
@@ -54,7 +54,7 @@ After everyone installs:
 
 ```bash
 # Each developer:
-ls .ai-pr-attribution/hooks/        # should list 3 scripts
+ls .ai-use/hooks/        # should list 3 scripts
 cat .cursor/hooks.json              # should reference collect-ai-event.sh
 cat .claude/settings.json           # same
 ls .git/hooks/pre-commit .git/hooks/pre-push   # both should exist
@@ -79,7 +79,7 @@ Hooks take a few days to settle in. People learn that AI edits captured-then-twe
 
 | Signal | Where to look | What to do |
 |---|---|---|
-| Workflow failures | `gh run list --workflow=ai-pr-attribution.yml` | Investigate any failing run. Common cause: missing `checks: write` permission. |
+| Workflow failures | `gh run list --workflow=ai-use.yml` | Investigate any failing run. Common cause: missing `checks: write` permission. |
 | Coverage gaps | `git for-each-ref refs/ai-attribution/` count vs team size | Chase missing developers. |
 | Dashboard freshness | `docs/AI_USAGE.md` last-modified timestamp | Should refresh on every push to main + daily at 06:00 UTC. |
 | %AI plausibility | Compare to each dev's gut-feel | "Does your reported % feel roughly right?" Calibrate trust before scaling. |
@@ -101,7 +101,7 @@ After one week of stable data from the pilot team:
 
 1. **One more team per week.** Don't go org-wide all at once.
 2. Add the install command to your **onboarding docs** so new joiners install it day 1.
-3. Add `ai-pr-attribution install` to any `make setup` / `bin/setup` script you have.
+3. Add `ai-use install` to any `make setup` / `bin/setup` script you have.
 4. Audit ref coverage monthly: `git for-each-ref refs/ai-attribution/ | wc -l` should be close to your active dev count.
 
 ## 90-day checkpoint
@@ -136,7 +136,7 @@ Mitigation:
 Mitigation:
 1. Events are hashed, so the secret isn't directly recoverable. But hashes of short secrets *are* dictionary-attackable.
 2. Wipe the affected developer's ref: `git push origin --delete refs/ai-attribution/<their-hash>`.
-3. Wipe their local events: `rm .ai-pr-attribution/events.ndjson`.
+3. Wipe their local events: `rm .ai-use/events.ndjson`.
 4. **Also**: rotate the actual secret — assume hash-of-secret is as good as leaked secret for any short value.
 
 ### Worst case 5: Workflow keeps committing to main and you can't merge anything
@@ -151,9 +151,9 @@ To fully uninstall from a repo:
 
 ```bash
 git rm -r --ignore-unmatch \
-  .ai-pr-attribution \
-  .github/workflows/ai-pr-attribution.yml \
-  .github/workflows/ai-pr-attribution-dashboard.yml \
+  .ai-use \
+  .github/workflows/ai-use.yml \
+  .github/workflows/ai-use-dashboard.yml \
   .claude/settings.json .cursor/hooks.json \
   docs/AI_USAGE.md
 rm -f .git/hooks/pre-commit .git/hooks/pre-push
@@ -170,8 +170,8 @@ git push origin --delete $(git ls-remote origin 'refs/ai-attribution/*' | awk '{
 Each developer should also clean up locally:
 
 ```bash
-rm -rf .ai-pr-attribution
-rm -rf ~/.ai-pr-attribution-venv  # only if uninstalling tool entirely
+rm -rf .ai-use
+rm -rf ~/.ai-use-venv  # only if uninstalling tool entirely
 ```
 
 ## Things that will eventually go wrong
@@ -193,7 +193,7 @@ Weekly, for the first month:
 git ls-remote origin 'refs/ai-attribution/*' | wc -l
 
 # Last 10 workflow runs (should be mostly green)
-gh run list --workflow=ai-pr-attribution.yml --limit 10
+gh run list --workflow=ai-use.yml --limit 10
 
 # Dashboard freshness
 git log -1 --format=%ai docs/AI_USAGE.md

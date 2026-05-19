@@ -1,6 +1,6 @@
 # AI Usage
 
-<!-- ai-pr-attribution:dashboard -->
+<!-- ai-use:dashboard -->
 _Last updated: 2026-05-19 08:59 UTC_
 
 ## At a glance

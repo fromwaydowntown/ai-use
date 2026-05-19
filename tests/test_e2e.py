@@ -3,14 +3,14 @@ import json
 
 import pytest
 
-from ai_pr_attribution.adapters import chunk_from_hook_payload
-from ai_pr_attribution.codex_session import chunks_from_codex_session
-from ai_pr_attribution.diff_parser import parse_unified_diff
-from ai_pr_attribution.events import read_chunks, write_chunks
-from ai_pr_attribution.hashing import hash_lines
-from ai_pr_attribution.matcher import attribute_lines, summarize
-from ai_pr_attribution.report import render_markdown
-from ai_pr_attribution.schema import AiCodeChunk
+from ai_use.adapters import chunk_from_hook_payload
+from ai_use.codex_session import chunks_from_codex_session
+from ai_use.diff_parser import parse_unified_diff
+from ai_use.events import read_chunks, write_chunks
+from ai_use.hashing import hash_lines
+from ai_use.matcher import attribute_lines, summarize
+from ai_use.report import render_markdown
+from ai_use.schema import AiCodeChunk
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────

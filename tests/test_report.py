@@ -1,16 +1,16 @@
 """Tests for markdown comment renderer, check-run renderer, and JSON summary."""
 import json
 
-from ai_pr_attribution.diff_parser import parse_unified_diff
-from ai_pr_attribution.hashing import hash_lines
-from ai_pr_attribution.matcher import attribute_lines, summarize
-from ai_pr_attribution.report import (
+from ai_use.diff_parser import parse_unified_diff
+from ai_use.hashing import hash_lines
+from ai_use.matcher import attribute_lines, summarize
+from ai_use.report import (
     COMMENT_MARKER,
     render_check_run,
     render_markdown,
     summary_to_json,
 )
-from ai_pr_attribution.schema import AiCodeChunk
+from ai_use.schema import AiCodeChunk
 
 
 def _chunk(file_path: str, text: str, tool: str = "cursor") -> AiCodeChunk:

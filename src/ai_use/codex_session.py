@@ -6,10 +6,10 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from ai_pr_attribution.events import append_chunk, read_chunks
-from ai_pr_attribution.git_utils import current_head, repo_id
-from ai_pr_attribution.hashing import hash_lines
-from ai_pr_attribution.schema import AiCodeChunk
+from ai_use.events import append_chunk, read_chunks
+from ai_use.git_utils import current_head, repo_id
+from ai_use.hashing import hash_lines
+from ai_use.schema import AiCodeChunk
 
 
 def latest_codex_session(home: Path | None = None) -> Path | None:

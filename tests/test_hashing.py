@@ -1,4 +1,4 @@
-from ai_pr_attribution.hashing import hash_line, hash_lines, normalize_line
+from ai_use.hashing import hash_line, hash_lines, normalize_line
 
 
 def test_normalize_line_trims_edges_and_line_endings():

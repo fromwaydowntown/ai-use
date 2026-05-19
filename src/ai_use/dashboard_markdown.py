@@ -10,11 +10,11 @@ from collections import Counter, defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from ai_pr_attribution.events import read_chunks
-from ai_pr_attribution.schema import AiCodeChunk
+from ai_use.events import read_chunks
+from ai_use.schema import AiCodeChunk
 
 TOOL_LABELS = {"claude_code": "Claude Code", "cursor": "Cursor", "codex": "Codex"}
-DASHBOARD_MARKER = "<!-- ai-pr-attribution:dashboard -->"
+DASHBOARD_MARKER = "<!-- ai-use:dashboard -->"
 WEEKS = 12
 
 

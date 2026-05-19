@@ -6,7 +6,7 @@ import sys
 import urllib.error
 import urllib.request
 
-from ai_pr_attribution.report import COMMENT_MARKER
+from ai_use.report import COMMENT_MARKER
 
 
 def upsert_pr_comment(body: str) -> None:
@@ -78,7 +78,7 @@ def upsert_check_run(head_sha: str, title: str, summary: str) -> None:
         message = str(exc)
         if "403" in message or "Resource not accessible" in message:
             print(
-                "ai-pr-attribution: skipping Check Run post — token lacks "
+                "ai-use: skipping Check Run post — token lacks "
                 "checks:write (likely a fork PR). Attribution result above.",
                 file=sys.stderr,
             )

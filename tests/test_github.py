@@ -2,7 +2,7 @@
 import json
 from unittest.mock import patch
 
-from ai_pr_attribution.github import CHECK_RUN_NAME, upsert_check_run, upsert_pr_comment
+from ai_use.github import CHECK_RUN_NAME, upsert_check_run, upsert_pr_comment
 
 
 def _event_file(tmp_path, pr_number=42):
@@ -25,7 +25,7 @@ def test_upsert_comment_creates_new_when_none_exists(tmp_path, monkeypatch):
         calls.append((method, url, data))
         return [] if method == "GET" else {}
 
-    with patch("ai_pr_attribution.github._request", side_effect=fake):
+    with patch("ai_use.github._request", side_effect=fake):
         upsert_pr_comment("test body")
 
     assert calls[0][0] == "GET"
@@ -47,11 +47,11 @@ def test_upsert_comment_patches_existing(tmp_path, monkeypatch):
         if method == "GET":
             return [
                 {"body": "unrelated", "url": "x"},
-                {"body": "<!-- ai-pr-attribution:mvp -->\nold", "url": existing_url},
+                {"body": "<!-- ai-use:mvp -->\nold", "url": existing_url},
             ]
         return {}
 
-    with patch("ai_pr_attribution.github._request", side_effect=fake):
+    with patch("ai_use.github._request", side_effect=fake):
         upsert_pr_comment("new body")
 
     assert calls[1] == ("PATCH", existing_url)
@@ -71,7 +71,7 @@ def test_upsert_check_run_creates_new_when_none_exists(monkeypatch):
             return {"check_runs": []}
         return {}
 
-    with patch("ai_pr_attribution.github._request", side_effect=fake):
+    with patch("ai_use.github._request", side_effect=fake):
         upsert_check_run("abc123", "61% AI", "## body")
 
     assert calls[0][0] == "GET"
@@ -100,7 +100,7 @@ def test_upsert_check_run_patches_existing(monkeypatch):
             return {"check_runs": [{"id": 999}]}
         return {}
 
-    with patch("ai_pr_attribution.github._request", side_effect=fake):
+    with patch("ai_use.github._request", side_effect=fake):
         upsert_check_run("abc123", "updated", "## body")
 
     assert calls[1] == ("PATCH", "https://api.github.com/repos/owner/repo/check-runs/999")
@@ -119,7 +119,7 @@ def test_upsert_check_run_filters_by_name(monkeypatch):
             return {"check_runs": []}
         return {}
 
-    with patch("ai_pr_attribution.github._request", side_effect=fake):
+    with patch("ai_use.github._request", side_effect=fake):
         upsert_check_run("sha1", "t", "s")
 
     assert "check_name=AI+Attribution" in captured_url[0]

@@ -38,12 +38,12 @@ That's the number you bring to a planning meeting.
 Run this from inside any git repo. No tokens or secrets needed.
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/fromwaydowntown/ai-pr-attribution/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/fromwaydowntown/ai-use/main/install.sh | bash
 ```
 
 The installer:
-1. Creates an isolated Python venv at `~/.ai-pr-attribution-venv` (won't touch your system Python)
-2. Installs the `ai-pr-attribution` CLI from this repo
+1. Creates an isolated Python venv at `~/.ai-use-venv` (won't touch your system Python)
+2. Installs the `ai-use` CLI from this repo
 3. Writes IDE hooks (Cursor, Claude Code), git hooks (pre-commit, pre-push), and two GitHub Actions workflows
 4. Commits and pushes the changes
 
@@ -64,7 +64,7 @@ The tool is built around one principle: **never let raw code leave the repo.** E
 │  Developer's machine                                                  │
 │                                                                       │
 │  ┌─────────────┐    ┌──────────────┐    ┌─────────────────────────┐   │
-│  │  Cursor /   │───▶│ collect-ai-  │───▶│ .ai-pr-attribution/     │   │
+│  │  Cursor /   │───▶│ collect-ai-  │───▶│ .ai-use/     │   │
 │  │ Claude Code │    │  event.sh    │    │   events.ndjson         │   │
 │  │             │    │ (IDE hook)   │    │   (line hashes only)    │   │
 │  └─────────────┘    └──────────────┘    └─────────────────────────┘   │
@@ -101,7 +101,7 @@ The tool is built around one principle: **never let raw code leave the repo.** E
 
 ### Capture: IDE hooks
 
-When you save a file edited with AI, the IDE invokes the local hook script (`.ai-pr-attribution/hooks/collect-ai-event.sh`). The hook reads the IDE's tool-call payload from stdin, normalizes each line, hashes it with SHA-256, and appends an `AiCodeChunk` record to `.ai-pr-attribution/events.ndjson`.
+When you save a file edited with AI, the IDE invokes the local hook script (`.ai-use/hooks/collect-ai-event.sh`). The hook reads the IDE's tool-call payload from stdin, normalizes each line, hashes it with SHA-256, and appends an `AiCodeChunk` record to `.ai-use/events.ndjson`.
 
 Each chunk records: `tool` (cursor/claude_code/codex), `file_path` (repo-relative), `line_hashes` (tuple of SHA-256 hex strings), `event_time`, `commit_base` (current HEAD), and tool-specific metadata. **No raw line content is ever written.**
 
@@ -116,7 +116,7 @@ To prevent false-positive attribution from trivial collisions, lines shorter tha
 
 ### Transport: per-developer git refs
 
-On every `git push`, the pre-push hook (`.ai-pr-attribution/hooks/upload-ref.sh`) stores `events.ndjson` as a git blob and force-pushes it to:
+On every `git push`, the pre-push hook (`.ai-use/hooks/upload-ref.sh`) stores `events.ndjson` as a git blob and force-pushes it to:
 
 ```
 refs/ai-attribution/<sha256(your-email)[:16]>
@@ -126,16 +126,16 @@ Each developer has their own ref so two devs pushing simultaneously never confli
 
 ### Analysis: per-PR Check Run
 
-On `pull_request` events, `.github/workflows/ai-pr-attribution.yml` runs:
+On `pull_request` events, `.github/workflows/ai-use.yml` runs:
 
 1. `actions/checkout` with `fetch-depth: 0`
 2. `git fetch origin '+refs/ai-attribution/*:refs/ai-attribution/*'` to pull every developer's chunks
 3. `pip install` the attribution CLI
-4. `ai-pr-attribution fetch-telemetry --github-native` concatenates all refs into `fetched-events.ndjson`
+4. `ai-use fetch-telemetry --github-native` concatenates all refs into `fetched-events.ndjson`
 5. `gh pr diff` downloads the PR diff
-6. `ai-pr-attribution analyze-pr --post-check`:
+6. `ai-use analyze-pr --post-check`:
    - Parses the unified diff into `AddedLine` records (`file_path` + `line_hash` + `text`)
-   - Filters out installer-generated files (`.ai-pr-attribution/`, the two workflow YAMLs, `.cursor/`, `.claude/`, `docs/AI_USAGE.md`)
+   - Filters out installer-generated files (`.ai-use/`, the two workflow YAMLs, `.cursor/`, `.claude/`, `docs/AI_USAGE.md`)
    - Hashes each added line; looks for `(file_path, line_hash)` exact match in any chunk
    - Posts a Check Run with the result
 
@@ -143,10 +143,10 @@ Cross-file matching is **deliberately disabled** — too many false positives on
 
 ### Aggregation: project-wide dashboard
 
-`.github/workflows/ai-pr-attribution-dashboard.yml` runs on push to `main` (and daily at 06:00 UTC):
+`.github/workflows/ai-use-dashboard.yml` runs on push to `main` (and daily at 06:00 UTC):
 
 1. Same checkout + ref-fetch as the PR workflow
-2. `ai-pr-attribution render-dashboard --github-native --output docs/AI_USAGE.md`:
+2. `ai-use render-dashboard --github-native --output docs/AI_USAGE.md`:
    - Aggregates AI lines per week per tool from the fetched chunks
    - Runs `git log --numstat` for the same window to get total added lines per week
    - Computes AI% = AI lines / total added lines per week (the real denominator, not just plotting absolute counts)
@@ -185,7 +185,7 @@ See the [FAQ](docs/FAQ.md) for more on accuracy, privacy, and troubleshooting.
 ## Dashboard
 
 ```bash
-ai-pr-attribution dashboard --repo .
+ai-use dashboard --repo .
 # open http://127.0.0.1:8787
 ```
 
@@ -199,9 +199,9 @@ From a repo where you installed it:
 
 ```bash
 git rm -r --ignore-unmatch \
-  .ai-pr-attribution \
-  .github/workflows/ai-pr-attribution.yml \
-  .github/workflows/ai-pr-attribution-dashboard.yml \
+  .ai-use \
+  .github/workflows/ai-use.yml \
+  .github/workflows/ai-use-dashboard.yml \
   .claude/settings.json .cursor/hooks.json \
   docs/AI_USAGE.md
 rm -f .git/hooks/pre-commit .git/hooks/pre-push

@@ -8,12 +8,12 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 
-from ai_pr_attribution.diff_parser import parse_unified_diff
-from ai_pr_attribution.events import DEFAULT_EVENTS_PATH, read_chunks
-from ai_pr_attribution.git_utils import run_git
-from ai_pr_attribution.hashing import hash_line
-from ai_pr_attribution.matcher import attribute_lines, summarize
-from ai_pr_attribution.schema import AiCodeChunk
+from ai_use.diff_parser import parse_unified_diff
+from ai_use.events import DEFAULT_EVENTS_PATH, read_chunks
+from ai_use.git_utils import run_git
+from ai_use.hashing import hash_line
+from ai_use.matcher import attribute_lines, summarize
+from ai_use.schema import AiCodeChunk
 
 
 def build_summary(events_file: Path, repo: Path | None = None) -> dict:
@@ -816,7 +816,7 @@ def _readiness(events_file: Path, repo: Path | None, chunks: list[AiCodeChunk]) 
             },
             {
                 "label": "Collector config",
-                "ok": (repo_path / ".ai-pr-attribution/config.json").exists(),
+                "ok": (repo_path / ".ai-use/config.json").exists(),
                 "detail": "Needed for pushed PR metrics",
             },
             {

@@ -1,6 +1,6 @@
-from ai_pr_attribution.dashboard import build_summary, render_dashboard_html
-from ai_pr_attribution.events import write_chunks
-from ai_pr_attribution.schema import AiCodeChunk
+from ai_use.dashboard import build_summary, render_dashboard_html
+from ai_use.events import write_chunks
+from ai_use.schema import AiCodeChunk
 
 
 def test_build_summary_groups_usage(tmp_path):

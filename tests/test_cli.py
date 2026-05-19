@@ -5,13 +5,13 @@ import sys
 
 import pytest
 
-from ai_pr_attribution.cli import main
+from ai_use.cli import main
 
 
 def run_cli(*args, stdin: str = ""):
     """Invoke the CLI in a subprocess to capture stdout/stderr cleanly."""
     return subprocess.run(
-        [sys.executable, "-m", "ai_pr_attribution.cli", *args],
+        [sys.executable, "-m", "ai_use.cli", *args],
         input=stdin, capture_output=True, text=True,
     )
 
@@ -24,8 +24,8 @@ def test_no_command_exits_with_error():
 def test_install_creates_files(tmp_path):
     subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
     assert main(["install", "--repo", str(tmp_path)]) == 0
-    assert (tmp_path / ".ai-pr-attribution" / "hooks" / "collect-ai-event.sh").exists()
-    assert (tmp_path / ".github" / "workflows" / "ai-pr-attribution.yml").exists()
+    assert (tmp_path / ".ai-use" / "hooks" / "collect-ai-event.sh").exists()
+    assert (tmp_path / ".github" / "workflows" / "ai-use.yml").exists()
     assert (tmp_path / ".claude" / "settings.json").exists()
     assert (tmp_path / ".cursor" / "hooks.json").exists()
 
@@ -37,7 +37,7 @@ def test_install_with_collector_uses_classic_mode(tmp_path):
         "--collector-url", "https://collector.example",
     ]) == 0
     # github-native skipped → no workflow file
-    assert not (tmp_path / ".github" / "workflows" / "ai-pr-attribution.yml").exists()
+    assert not (tmp_path / ".github" / "workflows" / "ai-use.yml").exists()
 
 
 def test_collect_hook_writes_event(tmp_path, monkeypatch):
@@ -99,5 +99,5 @@ class _Stdin:
 
 
 def _hash_line(text: str) -> str:
-    from ai_pr_attribution.hashing import hash_line
+    from ai_use.hashing import hash_line
     return hash_line(text)

@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import re
 
-from ai_pr_attribution.hashing import hash_line
-from ai_pr_attribution.schema import AddedLine
+from ai_use.hashing import hash_line
+from ai_use.schema import AddedLine
 
 HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 
@@ -11,9 +11,9 @@ HUNK_RE = re.compile(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@")
 # from attribution analysis. Counting these inflates the denominator with
 # files the developer didn't write, distorting the AI%.
 _INSTALLER_PATHS = (
-    ".ai-pr-attribution/",
-    ".github/workflows/ai-pr-attribution.yml",
-    ".github/workflows/ai-pr-attribution-dashboard.yml",
+    ".ai-use/",
+    ".github/workflows/ai-use.yml",
+    ".github/workflows/ai-use-dashboard.yml",
     ".claude/settings.json",
     ".claude/",
     ".cursor/hooks.json",

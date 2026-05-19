@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-CONFIG_PATH = Path(".ai-pr-attribution/config.json")
+CONFIG_PATH = Path(".ai-use/config.json")
 
 
 def write_config(repo: Path, values: dict[str, Any]) -> Path:

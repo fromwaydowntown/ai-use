@@ -7,4 +7,4 @@ elif command -v python3 >/dev/null 2>&1; then
 else
   py="python"
 fi
-"$py" -m ai_pr_attribution.cli import-codex-session --repo "$repo" >/dev/null 2>&1 || true
+"$py" -m ai_use.cli import-codex-session --repo "$repo" >/dev/null 2>&1 || true

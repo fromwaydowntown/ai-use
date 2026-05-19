@@ -55,7 +55,7 @@ def upload_events(events_file: Path, repo: Path) -> int:
     try:
         ref = _user_ref(repo)
     except UserEmailMissingError as exc:
-        print(f"ai-pr-attribution: {exc}", file=sys.stderr)
+        print(f"ai-use: {exc}", file=sys.stderr)
         return 0
 
     # Write the file as a git blob object
@@ -65,7 +65,7 @@ def upload_events(events_file: Path, repo: Path) -> int:
     try:
         _git("push", "origin", f"{blob_sha}:{ref}", "--force", cwd=repo)
     except subprocess.CalledProcessError as exc:
-        print(f"ai-pr-attribution: failed to push events ref: {exc.stderr}", file=sys.stderr)
+        print(f"ai-use: failed to push events ref: {exc.stderr}", file=sys.stderr)
         return 0
 
     return content.count("\n") + 1
