@@ -1,13 +1,13 @@
-# AI PR Attribution
+# ai-use
 
 You're spending on AI tooling. Are developers actually using it? Is it shipping?
 
 Most teams can't answer that. Billing dashboards show token spend. They don't show how much of that output survives code review and lands in `main`.
 
-**AI PR Attribution tracks the percentage of shipped lines that came from AI — per PR, per developer, over time.**
+**ai-use tracks the percentage of shipped lines that came from AI — per PR, per developer, over time.**
 
 ```
-AI attribution · `██████░░░░` 61% AI · 49/80 lines
+AI usage · `██████░░░░` 61% AI · 49/80 lines
 ```
 
 No servers. No secrets. Hashes only — no code leaves your repo.
@@ -18,7 +18,7 @@ No servers. No secrets. Hashes only — no code leaves your repo.
 
 AI tooling is a real budget line. Seat costs, token limits, enterprise plans — it adds up. But adoption is invisible. A developer can have Claude Code open all day and still write everything by hand. You'd never know.
 
-Attribution gives you a trend:
+ai-use gives you a trend:
 
 ```
 Jan  ██░░░░░░░░  22%   ← rolled out Claude Code
@@ -64,7 +64,7 @@ The tool is built around one principle: **never let raw code leave the repo.** E
 │  Developer's machine                                                  │
 │                                                                       │
 │  ┌─────────────┐    ┌──────────────┐    ┌─────────────────────────┐   │
-│  │  Cursor /   │───▶│ collect-ai-  │───▶│ .ai-use/     │   │
+│  │  Cursor /   │───▶│ collect-ai-  │───▶│ .ai-use/                │   │
 │  │ Claude Code │    │  event.sh    │    │   events.ndjson         │   │
 │  │             │    │ (IDE hook)   │    │   (line hashes only)    │   │
 │  └─────────────┘    └──────────────┘    └─────────────────────────┘   │
@@ -85,11 +85,11 @@ The tool is built around one principle: **never let raw code leave the repo.** E
 ┌──────────────────────────────────────────────────────────────────────┐
 │  GitHub remote                                                        │
 │                                                                       │
-│   refs/ai-attribution/<sha256(email)[:16]>                            │
+│   refs/ai-use/<sha256(email)[:16]>                                    │
 │      (one git blob per developer, holds their events.ndjson)          │
 │                                                                       │
 │   On PR opened / synchronize / closed:                                │
-│     1. workflow fetches all refs/ai-attribution/*                     │
+│     1. workflow fetches all refs/ai-use/*                             │
 │     2. downloads PR diff                                              │
 │     3. matches each diff line's hash against fetched events           │
 │     4. posts a Check Run with the AI%                                 │
@@ -110,16 +110,16 @@ Hooks are configured per-IDE:
 - **Claude Code** — `.claude/settings.json`, fires on `PostToolUse` for `Edit|MultiEdit|Write`.
 - **Codex Desktop** — has no per-repo hook; the pre-commit git hook runs `import-codex-session.sh` which reads the latest `~/.codex/sessions/*.jsonl`, filters to changes inside the current repo, and imports them.
 
-### Lines that are *not* hashed
+### Lines that are *not* tracked
 
-To prevent false-positive attribution from trivial collisions, lines shorter than 8 characters (after normalization) are intentionally **never hashed** — they're stored as `NULL_HASH = ""` and the matcher treats them as always-unmatched (i.e., human-written). This kills the otherwise-pathological case where one AI user's blank lines would attribute every blank line in every PR to AI.
+To prevent false-positive matches from trivial collisions, lines shorter than 8 characters (after normalization) are intentionally **never hashed** — they're stored as `NULL_HASH = ""` and the matcher treats them as always-unmatched (i.e., human-written). This kills the otherwise-pathological case where one AI user's blank lines would match every blank line in every PR to AI.
 
 ### Transport: per-developer git refs
 
 On every `git push`, the pre-push hook (`.ai-use/hooks/upload-ref.sh`) stores `events.ndjson` as a git blob and force-pushes it to:
 
 ```
-refs/ai-attribution/<sha256(your-email)[:16]>
+refs/ai-use/<sha256(your-email)[:16]>
 ```
 
 Each developer has their own ref so two devs pushing simultaneously never conflict. Authentication piggybacks on your normal git push credentials — no tokens, no secrets. The hook refuses to push if `git config user.email` is unset.
@@ -129,8 +129,8 @@ Each developer has their own ref so two devs pushing simultaneously never confli
 On `pull_request` events, `.github/workflows/ai-use.yml` runs:
 
 1. `actions/checkout` with `fetch-depth: 0`
-2. `git fetch origin '+refs/ai-attribution/*:refs/ai-attribution/*'` to pull every developer's chunks
-3. `pip install` the attribution CLI
+2. `git fetch origin '+refs/ai-use/*:refs/ai-use/*'` to pull every developer's chunks
+3. `pip install` the ai-use CLI
 4. `ai-use fetch-telemetry --github-native` concatenates all refs into `fetched-events.ndjson`
 5. `gh pr diff` downloads the PR diff
 6. `ai-use analyze-pr --post-check`:
@@ -139,7 +139,7 @@ On `pull_request` events, `.github/workflows/ai-use.yml` runs:
    - Hashes each added line; looks for `(file_path, line_hash)` exact match in any chunk
    - Posts a Check Run with the result
 
-Cross-file matching is **deliberately disabled** — too many false positives on common boilerplate (`import json`, `}`, etc.). Only exact file-path matches count as AI-attributed.
+Cross-file matching is **deliberately disabled** — too many false positives on common boilerplate (`import json`, `}`, etc.). Only exact file-path matches count as AI-written.
 
 ### Aggregation: project-wide dashboard
 
@@ -168,15 +168,15 @@ Cross-file matching is **deliberately disabled** — too many false positives on
 
 ## What's measured (and what isn't)
 
-**Attributed:** AI-written lines that survive review and are present in the merged PR's diff, at the *same file path*.
+**Counted as AI:** lines that survive review and are present in the merged PR's diff, at the *same file path*.
 
-**Not attributed:**
+**Not counted:**
 - AI-written lines edited by a human (any character change breaks the hash)
 - AI exploration / scaffolding that didn't end up in the final code
 - AI-written lines moved between files (cross-file matching is disabled)
 - Lines shorter than 8 characters after whitespace trim (deliberately, to avoid collisions)
 
-The number is **systematically conservative** — actual AI involvement is higher than the reported %. That's by design: we'd rather under-report than falsely accuse a developer of using AI when they didn't.
+The number is **systematically conservative** — actual AI involvement is higher than the reported %. That's by design: we'd rather under-report than falsely flag a developer.
 
 See the [FAQ](docs/FAQ.md) for more on accuracy, privacy, and troubleshooting.
 
@@ -205,13 +205,13 @@ git rm -r --ignore-unmatch \
   .claude/settings.json .cursor/hooks.json \
   docs/AI_USAGE.md
 rm -f .git/hooks/pre-commit .git/hooks/pre-push
-git commit -m "chore: remove AI PR attribution"
+git commit -m "chore: remove ai-use"
 ```
 
 To also wipe historical events from the remote:
 
 ```bash
-git push origin --delete $(git ls-remote origin 'refs/ai-attribution/*' | awk '{print $2}')
+git push origin --delete $(git ls-remote origin 'refs/ai-use/*' | awk '{print $2}')
 ```
 
 ---
