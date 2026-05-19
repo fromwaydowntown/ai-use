@@ -7,23 +7,23 @@ import sys
 import urllib.request
 from pathlib import Path
 
-from ai_pr_attribution.adapters import chunk_from_hook_payload, parse_hook_stdin
-from ai_pr_attribution.codex_session import import_codex_session, latest_codex_session
-from ai_pr_attribution.collector_server import serve
-from ai_pr_attribution.dashboard import serve_dashboard
-from ai_pr_attribution.diff_parser import parse_unified_diff
-from ai_pr_attribution.events import DEFAULT_EVENTS_PATH, append_chunk, read_chunks
-from ai_pr_attribution.git_utils import repo_id
-from ai_pr_attribution.github import upsert_check_run, upsert_pr_comment
-from ai_pr_attribution.installer import install_all, install_github_native, install_hooks
-from ai_pr_attribution.matcher import attribute_lines, summarize
-from ai_pr_attribution.report import render_check_run, render_markdown, summary_to_json
-from ai_pr_attribution.schema import ToolName
-from ai_pr_attribution.telemetry_client import fetch_telemetry, upload_telemetry
+from ai_use.adapters import chunk_from_hook_payload, parse_hook_stdin
+from ai_use.codex_session import import_codex_session, latest_codex_session
+from ai_use.collector_server import serve
+from ai_use.dashboard import serve_dashboard
+from ai_use.diff_parser import parse_unified_diff
+from ai_use.events import DEFAULT_EVENTS_PATH, append_chunk, read_chunks
+from ai_use.git_utils import repo_id
+from ai_use.github import upsert_check_run, upsert_pr_comment
+from ai_use.installer import install_all, install_github_native, install_hooks
+from ai_use.matcher import attribute_lines, summarize
+from ai_use.report import render_check_run, render_markdown, summary_to_json
+from ai_use.schema import ToolName
+from ai_use.telemetry_client import fetch_telemetry, upload_telemetry
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="ai-pr-attribution")
+    parser = argparse.ArgumentParser(prog="ai-use")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     install = subparsers.add_parser("install", help="Install collection hooks for this repo.")
@@ -81,7 +81,7 @@ def main(argv: list[str] | None = None) -> int:
 
     fetch = subparsers.add_parser("fetch-telemetry")
     fetch.add_argument("--repo", type=Path, default=Path.cwd())
-    fetch.add_argument("--output", type=Path, default=Path(".ai-pr-attribution/fetched-events.ndjson"))
+    fetch.add_argument("--output", type=Path, default=Path(".ai-use/fetched-events.ndjson"))
     fetch.add_argument("--collector-url")
     fetch.add_argument("--collector-token")
     fetch.add_argument("--commit-sha")
@@ -92,7 +92,7 @@ def main(argv: list[str] | None = None) -> int:
     server = subparsers.add_parser("serve-collector")
     server.add_argument("--host", default="127.0.0.1")
     server.add_argument("--port", type=int, default=8765)
-    server.add_argument("--db", type=Path, default=Path(".ai-pr-attribution/collector.sqlite3"))
+    server.add_argument("--db", type=Path, default=Path(".ai-use/collector.sqlite3"))
     server.add_argument("--token")
 
     dashboard = subparsers.add_parser("dashboard", help="Run the local usage dashboard.")
@@ -140,13 +140,13 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _render_dashboard(args) -> int:
-    from ai_pr_attribution.dashboard_markdown import render_dashboard_markdown
+    from ai_use.dashboard_markdown import render_dashboard_markdown
     repo = args.repo.resolve()
     events_file = args.events_file or repo / DEFAULT_EVENTS_PATH
 
     if getattr(args, "github_native", False):
-        from ai_pr_attribution.github_native import download_events
-        fetched = repo / ".ai-pr-attribution/fetched-events.ndjson"
+        from ai_use.github_native import download_events
+        fetched = repo / ".ai-use/fetched-events.ndjson"
         download_events(fetched, repo)
         events_file = fetched
 
@@ -168,7 +168,7 @@ def _install(repo: Path, collector_url: str | None, collector_token: str | None)
     if collector_url:
         print("Hash-only telemetry will upload automatically before git pushes.")
     else:
-        print("Set a collector later with: ai-pr-attribution install --collector-url https://collector.example")
+        print("Set a collector later with: ai-use install --collector-url https://collector.example")
     return 0
 
 
@@ -191,7 +191,7 @@ def _install_github_native(repo: Path, commit: bool = False) -> int:
             print("  git push")
     else:
         print("\nCommit and push to activate:")
-        print("  git add .ai-pr-attribution .github/workflows/ai-pr-attribution.yml .cursor .claude")
+        print("  git add .ai-use .github/workflows/ai-use.yml .cursor .claude")
         print("  git commit -m 'chore: add AI PR attribution'")
         print("  git push")
     return 0
@@ -212,12 +212,12 @@ def _analyze(args: argparse.Namespace) -> int:
     events_file = args.events_file or repo / DEFAULT_EVENTS_PATH
 
     if getattr(args, "github_native", False):
-        from ai_pr_attribution.github_native import download_events
-        fetched = repo / ".ai-pr-attribution/fetched-events.ndjson"
+        from ai_use.github_native import download_events
+        fetched = repo / ".ai-use/fetched-events.ndjson"
         download_events(fetched, repo)
         events_file = fetched
     elif args.collector_url or os.environ.get("AI_ATTRIBUTION_COLLECTOR_URL"):
-        events_file = repo / ".ai-pr-attribution/fetched-events.ndjson"
+        events_file = repo / ".ai-use/fetched-events.ndjson"
         fetch_telemetry(
             repo,
             events_file,
@@ -256,7 +256,7 @@ def _analyze(args: argparse.Namespace) -> int:
 
 
 def _upload_ref(repo: Path, events_file: Path | None) -> int:
-    from ai_pr_attribution.github_native import upload_events
+    from ai_use.github_native import upload_events
     repo = repo.resolve()
     target = events_file or repo / DEFAULT_EVENTS_PATH
     count = upload_events(target, repo)
@@ -286,7 +286,7 @@ def _upload_telemetry(repo: Path, events_file: Path | None, collector_url: str |
 def _fetch_telemetry(args: argparse.Namespace) -> int:
     repo = args.repo.resolve()
     if getattr(args, "github_native", False):
-        from ai_pr_attribution.github_native import download_events
+        from ai_use.github_native import download_events
         count = download_events(args.output, repo)
         print(json.dumps({"chunks": count, "events_file": str(args.output)}, sort_keys=True))
         return 0

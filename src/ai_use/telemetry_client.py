@@ -5,10 +5,10 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-from ai_pr_attribution.config import collector_token, collector_url
-from ai_pr_attribution.events import read_chunks, write_chunks
-from ai_pr_attribution.git_utils import current_head, repo_id, run_git
-from ai_pr_attribution.schema import AiCodeChunk
+from ai_use.config import collector_token, collector_url
+from ai_use.events import read_chunks, write_chunks
+from ai_use.git_utils import current_head, repo_id, run_git
+from ai_use.schema import AiCodeChunk
 
 
 def upload_telemetry(repo: Path, events_file: Path, url: str | None = None, token: str | None = None) -> dict:

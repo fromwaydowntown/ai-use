@@ -6,9 +6,9 @@ import shlex
 import stat
 from pathlib import Path
 
-from ai_pr_attribution.config import write_config
+from ai_use.config import write_config
 
-HOOK_MARKER = "# ai-pr-attribution managed hook"
+HOOK_MARKER = "# ai-use managed hook"
 
 HOOK_SCRIPT = """#!/usr/bin/env sh
 tool="${AI_PR_ATTRIBUTION_TOOL:-cursor}"
@@ -20,7 +20,7 @@ elif command -v python3 >/dev/null 2>&1; then
 else
   py="python"
 fi
-exec "$py" -m ai_pr_attribution.cli collect-hook --tool "$tool" --repo "$repo"
+exec "$py" -m ai_use.cli collect-hook --tool "$tool" --repo "$repo"
 """
 
 CODEX_IMPORT_SCRIPT = """#!/usr/bin/env sh
@@ -32,15 +32,15 @@ elif command -v python3 >/dev/null 2>&1; then
 else
   py="python"
 fi
-"$py" -m ai_pr_attribution.cli import-codex-session --repo "$repo" >/dev/null 2>&1 || true
+"$py" -m ai_use.cli import-codex-session --repo "$repo" >/dev/null 2>&1 || true
 """
 
 UPLOAD_SCRIPT = """#!/usr/bin/env sh
 repo="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-if [ -x "$repo/.venv/bin/ai-pr-attribution" ]; then
-  cli="$repo/.venv/bin/ai-pr-attribution"
+if [ -x "$repo/.venv/bin/ai-use" ]; then
+  cli="$repo/.venv/bin/ai-use"
 else
-  cli="ai-pr-attribution"
+  cli="ai-use"
 fi
 "$cli" import-codex-session --repo "$repo" >/dev/null 2>&1 || true
 "$cli" upload-telemetry --repo "$repo" >/dev/null 2>&1 || true
@@ -60,8 +60,8 @@ elif command -v python3 >/dev/null 2>&1; then
 else
   py="python"
 fi
-"$py" -m ai_pr_attribution.cli import-codex-session --repo "$repo" >/dev/null 2>&1 || true
-"$py" -m ai_pr_attribution.cli upload-ref --repo "$repo" >/dev/null 2>&1 || true
+"$py" -m ai_use.cli import-codex-session --repo "$repo" >/dev/null 2>&1 || true
+"$py" -m ai_use.cli upload-ref --repo "$repo" >/dev/null 2>&1 || true
 """
 
 
@@ -71,7 +71,7 @@ def install_hooks(repo: Path, collector_url: str | None = None, collector_token:
     if collector_url or collector_token:
         created.append(write_config(repo, {"collector_url": collector_url, "collector_token": collector_token}))
 
-    hook_dir = repo / ".ai-pr-attribution" / "hooks"
+    hook_dir = repo / ".ai-use" / "hooks"
     hook_dir.mkdir(parents=True, exist_ok=True)
 
     runner = hook_dir / "collect-ai-event.sh"
@@ -99,11 +99,11 @@ def install_hooks(repo: Path, collector_url: str | None = None, collector_token:
     claude_config.write_text(json.dumps(_claude_hooks_config(runner), indent=2) + "\n", encoding="utf-8")
     created.append(claude_config)
 
-    codex_readme = repo / ".ai-pr-attribution" / "codex-hook.md"
+    codex_readme = repo / ".ai-use" / "codex-hook.md"
     codex_readme.write_text(_codex_instructions(runner), encoding="utf-8")
     created.append(codex_readme)
 
-    gitignore = repo / ".ai-pr-attribution" / ".gitignore"
+    gitignore = repo / ".ai-use" / ".gitignore"
     gitignore.write_text("events.ndjson\nfetched-events.ndjson\ncollector.sqlite3*\nconfig.json\n*.tmp\n", encoding="utf-8")
     created.append(gitignore)
 
@@ -124,7 +124,7 @@ def install_github_native(repo: Path) -> list[Path]:
     repo = repo.resolve()
     created: list[Path] = []
 
-    hook_dir = repo / ".ai-pr-attribution" / "hooks"
+    hook_dir = repo / ".ai-use" / "hooks"
     hook_dir.mkdir(parents=True, exist_ok=True)
 
     runner = hook_dir / "collect-ai-event.sh"
@@ -156,7 +156,7 @@ def install_github_native(repo: Path) -> list[Path]:
     )
     created.append(claude_config)
 
-    gitignore = repo / ".ai-pr-attribution" / ".gitignore"
+    gitignore = repo / ".ai-use" / ".gitignore"
     gitignore.write_text(
         "events.ndjson\nfetched-events.ndjson\ncollector.sqlite3*\nconfig.json\n*.tmp\n",
         encoding="utf-8",
@@ -166,8 +166,8 @@ def install_github_native(repo: Path) -> list[Path]:
     for git_hook in _install_git_hooks(repo, codex_importer, uploader):
         created.append(git_hook)
 
-    created.append(_install_workflow_file(repo, "workflow.yml", "ai-pr-attribution.yml"))
-    created.append(_install_workflow_file(repo, "dashboard_workflow.yml", "ai-pr-attribution-dashboard.yml"))
+    created.append(_install_workflow_file(repo, "workflow.yml", "ai-use.yml"))
+    created.append(_install_workflow_file(repo, "dashboard_workflow.yml", "ai-use-dashboard.yml"))
 
     return created
 
@@ -176,14 +176,14 @@ def _install_workflow_file(repo: Path, src_name: str, dest_name: str) -> Path:
     workflow_dir = repo / ".github" / "workflows"
     workflow_dir.mkdir(parents=True, exist_ok=True)
     dest = workflow_dir / dest_name
-    pkg = importlib.resources.files("ai_pr_attribution") / "data" / src_name
+    pkg = importlib.resources.files("ai_use") / "data" / src_name
     dest.write_bytes(pkg.read_bytes())
     return dest
 
 
 def _cursor_hooks_config(runner: Path) -> dict:
     rel = runner.name  # always collect-ai-event.sh
-    command = f'AI_PR_ATTRIBUTION_TOOL=cursor sh "$(git rev-parse --show-toplevel)/.ai-pr-attribution/hooks/{rel}"'
+    command = f'AI_PR_ATTRIBUTION_TOOL=cursor sh "$(git rev-parse --show-toplevel)/.ai-use/hooks/{rel}"'
     return {
         "version": 1,
         "hooks": {
@@ -206,7 +206,7 @@ def _cursor_hooks_config(runner: Path) -> dict:
 
 def _claude_hooks_config(runner: Path) -> dict:
     rel = runner.name  # always collect-ai-event.sh
-    command = f'AI_PR_ATTRIBUTION_TOOL=claude_code sh "$(git rev-parse --show-toplevel)/.ai-pr-attribution/hooks/{rel}"'
+    command = f'AI_PR_ATTRIBUTION_TOOL=claude_code sh "$(git rev-parse --show-toplevel)/.ai-use/hooks/{rel}"'
     return {
         "hooks": {
             "PostToolUse": [{"matcher": "Edit|MultiEdit|Write", "hooks": [{"type": "command", "command": command}]}],
@@ -216,7 +216,7 @@ def _claude_hooks_config(runner: Path) -> dict:
 
 
 def _codex_instructions(runner: Path) -> str:
-    rel = f'.ai-pr-attribution/hooks/{runner.name}'
+    rel = f'.ai-use/hooks/{runner.name}'
     return f"""# Codex Hook Adapter
 
 Codex Desktop does not currently expose the same repo hook file shape as Cursor
@@ -229,7 +229,7 @@ Manual collection is also available (run from repo root):
 AI_PR_ATTRIBUTION_TOOL=codex sh {shlex.quote(rel)}
 ```
 
-The collector stores hash-only evidence in `.ai-pr-attribution/events.ndjson`.
+The collector stores hash-only evidence in `.ai-use/events.ndjson`.
 """
 
 
@@ -262,7 +262,7 @@ def _install_git_hooks(repo: Path, codex_importer: Path, uploader: Path) -> list
 
 
 def _install_git_hook(hook_path: Path, command_path: Path) -> Path:
-    backup = hook_path.with_name(f"{hook_path.name}.before-ai-pr-attribution")
+    backup = hook_path.with_name(f"{hook_path.name}.before-ai-use")
     existing = hook_path.read_text(encoding="utf-8") if hook_path.exists() else ""
     if HOOK_MARKER in existing:
         preserved_call = f'{shlex.quote(str(backup))} "$@"'

@@ -1,4 +1,4 @@
-from ai_pr_attribution.diff_parser import parse_unified_diff
+from ai_use.diff_parser import parse_unified_diff
 
 
 def test_parse_added_lines_from_modified_file():

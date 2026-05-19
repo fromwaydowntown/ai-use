@@ -6,9 +6,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from ai_pr_attribution.git_utils import current_head, repo_id
-from ai_pr_attribution.hashing import hash_lines
-from ai_pr_attribution.schema import AiCodeChunk, ToolName
+from ai_use.git_utils import current_head, repo_id
+from ai_use.hashing import hash_lines
+from ai_use.schema import AiCodeChunk, ToolName
 
 
 TEXT_KEYS = ("text", "content", "new_string", "generated_text", "output", "diff")

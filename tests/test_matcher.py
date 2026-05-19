@@ -1,7 +1,7 @@
-from ai_pr_attribution.diff_parser import parse_unified_diff
-from ai_pr_attribution.hashing import hash_lines
-from ai_pr_attribution.matcher import attribute_lines, summarize
-from ai_pr_attribution.schema import AiCodeChunk
+from ai_use.diff_parser import parse_unified_diff
+from ai_use.hashing import hash_lines
+from ai_use.matcher import attribute_lines, summarize
+from ai_use.schema import AiCodeChunk
 
 
 def chunk(file_path: str, text: str, tool: str = "cursor") -> AiCodeChunk:

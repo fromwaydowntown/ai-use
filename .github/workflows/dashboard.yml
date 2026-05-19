@@ -33,7 +33,7 @@ jobs:
         run: pip install .
 
       - name: Render dashboard
-        run: ai-pr-attribution render-dashboard --repo . --github-native --output docs/AI_USAGE.md
+        run: ai-use render-dashboard --repo . --github-native --output docs/AI_USAGE.md
 
       - name: Commit updated dashboard
         run: |

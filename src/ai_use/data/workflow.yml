@@ -25,13 +25,13 @@ jobs:
           python-version: "3.11"
 
       - name: Install attribution CLI
-        run: pip install "git+https://github.com/fromwaydowntown/ai-pr-attribution.git"
+        run: pip install "git+https://github.com/fromwaydowntown/ai-use.git"
 
       - name: Collect events from all developers
         run: |
-          ai-pr-attribution fetch-telemetry \
+          ai-use fetch-telemetry \
             --repo . \
-            --output .ai-pr-attribution/fetched-events.ndjson \
+            --output .ai-use/fetched-events.ndjson \
             --github-native || true
 
       - name: Download PR diff
@@ -43,10 +43,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ai-pr-attribution analyze-pr \
+          ai-use analyze-pr \
             --repo . \
             --diff-file pr.diff \
             --commit-sha "${{ github.event.pull_request.head.sha }}" \
-            --events-file .ai-pr-attribution/fetched-events.ndjson \
+            --events-file .ai-use/fetched-events.ndjson \
             --post-check \
             ${{ github.event.pull_request.merged && '--final' || '' }}

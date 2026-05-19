@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import json
 
-from ai_pr_attribution.schema import AttributionSummary, LineAttribution
+from ai_use.schema import AttributionSummary, LineAttribution
 
-COMMENT_MARKER = "<!-- ai-pr-attribution:mvp -->"
+COMMENT_MARKER = "<!-- ai-use:mvp -->"
 
 
 def summary_to_json(summary: AttributionSummary) -> str:

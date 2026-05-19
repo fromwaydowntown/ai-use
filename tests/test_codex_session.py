@@ -1,7 +1,7 @@
 import json
 
-from ai_pr_attribution.codex_session import chunks_from_codex_session, import_codex_session
-from ai_pr_attribution.hashing import hash_line
+from ai_use.codex_session import chunks_from_codex_session, import_codex_session
+from ai_use.hashing import hash_line
 
 
 def test_chunks_from_codex_session_imports_patch_added_lines(tmp_path):
@@ -35,7 +35,7 @@ def test_chunks_from_codex_session_imports_patch_added_lines(tmp_path):
 def test_import_codex_session_is_idempotent(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
-    events = repo / ".ai-pr-attribution" / "events.ndjson"
+    events = repo / ".ai-use" / "events.ndjson"
     session = tmp_path / "session.jsonl"
     session.write_text(
         json.dumps(

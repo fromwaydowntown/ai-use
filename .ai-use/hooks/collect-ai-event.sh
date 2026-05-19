@@ -8,4 +8,4 @@ elif command -v python3 >/dev/null 2>&1; then
 else
   py="python"
 fi
-exec "$py" -m ai_pr_attribution.cli collect-hook --tool "$tool" --repo "$repo"
+exec "$py" -m ai_use.cli collect-hook --tool "$tool" --repo "$repo"

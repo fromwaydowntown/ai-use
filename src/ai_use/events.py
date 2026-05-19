@@ -4,10 +4,10 @@ import json
 from pathlib import Path
 from typing import Iterable
 
-from ai_pr_attribution.schema import AiCodeChunk
+from ai_use.schema import AiCodeChunk
 
 
-DEFAULT_EVENTS_PATH = Path(".ai-pr-attribution/events.ndjson")
+DEFAULT_EVENTS_PATH = Path(".ai-use/events.ndjson")
 
 
 def append_chunk(path: Path, chunk: AiCodeChunk) -> None:

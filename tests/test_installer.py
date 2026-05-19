@@ -3,7 +3,7 @@ import os
 import shlex
 import subprocess
 
-from ai_pr_attribution.installer import install_all, install_github_native, install_hooks
+from ai_use.installer import install_all, install_github_native, install_hooks
 
 
 def test_install_hooks_quotes_paths_with_spaces(tmp_path):
@@ -12,8 +12,8 @@ def test_install_hooks_quotes_paths_with_spaces(tmp_path):
     created = install_hooks(repo)
     cursor_config = json.loads((repo / ".cursor" / "hooks.json").read_text(encoding="utf-8"))
     command = cursor_config["hooks"]["afterFileEdit"][0]["command"]
-    assert ".ai-pr-attribution/hooks/collect-ai-event.sh" in command
-    assert repo / ".ai-pr-attribution" / "hooks" / "collect-ai-event.sh" in created
+    assert ".ai-use/hooks/collect-ai-event.sh" in command
+    assert repo / ".ai-use" / "hooks" / "collect-ai-event.sh" in created
 
 
 def test_install_all_adds_git_pre_commit_hook(tmp_path):
@@ -26,8 +26,8 @@ def test_install_all_adds_git_pre_commit_hook(tmp_path):
     pre_commit = repo / ".git" / "hooks" / "pre-commit"
     assert pre_commit in created
     content = pre_commit.read_text(encoding="utf-8")
-    assert "ai-pr-attribution managed hook" in content
-    assert ".ai-pr-attribution/hooks/import-codex-session.sh" in content
+    assert "ai-use managed hook" in content
+    assert ".ai-use/hooks/import-codex-session.sh" in content
 
 
 def test_install_all_preserves_existing_pre_commit_hook(tmp_path):
@@ -39,10 +39,10 @@ def test_install_all_preserves_existing_pre_commit_hook(tmp_path):
 
     install_all(repo)
 
-    backup = repo / ".git" / "hooks" / "pre-commit.before-ai-pr-attribution"
+    backup = repo / ".git" / "hooks" / "pre-commit.before-ai-use"
     assert backup.exists()
     assert "echo existing" in backup.read_text(encoding="utf-8")
-    assert "pre-commit.before-ai-pr-attribution" in pre_commit.read_text(encoding="utf-8")
+    assert "pre-commit.before-ai-use" in pre_commit.read_text(encoding="utf-8")
 
 
 # ── github-native install (the default rollout path) ─────────────────────────
@@ -61,13 +61,13 @@ def test_install_github_native_creates_all_expected_files(tmp_path):
     created = install_github_native(repo)
 
     must_exist = [
-        repo / ".ai-pr-attribution" / "hooks" / "collect-ai-event.sh",
-        repo / ".ai-pr-attribution" / "hooks" / "import-codex-session.sh",
-        repo / ".ai-pr-attribution" / "hooks" / "upload-ref.sh",
+        repo / ".ai-use" / "hooks" / "collect-ai-event.sh",
+        repo / ".ai-use" / "hooks" / "import-codex-session.sh",
+        repo / ".ai-use" / "hooks" / "upload-ref.sh",
         repo / ".cursor" / "hooks.json",
         repo / ".claude" / "settings.json",
-        repo / ".github" / "workflows" / "ai-pr-attribution.yml",
-        repo / ".github" / "workflows" / "ai-pr-attribution-dashboard.yml",
+        repo / ".github" / "workflows" / "ai-use.yml",
+        repo / ".github" / "workflows" / "ai-use-dashboard.yml",
         repo / ".git" / "hooks" / "pre-commit",
         repo / ".git" / "hooks" / "pre-push",
     ]
@@ -86,7 +86,7 @@ def test_pre_push_hook_has_recursion_guard(tmp_path):
     subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
     install_github_native(repo)
 
-    uploader = repo / ".ai-pr-attribution" / "hooks" / "upload-ref.sh"
+    uploader = repo / ".ai-use" / "hooks" / "upload-ref.sh"
     content = uploader.read_text()
     assert 'AI_PR_ATTRIBUTION_UPLOADING' in content
     assert 'export AI_PR_ATTRIBUTION_UPLOADING=1' in content
@@ -99,7 +99,7 @@ def test_upload_ref_script_exits_zero_when_guard_set(tmp_path):
     repo.mkdir()
     subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
     install_github_native(repo)
-    uploader = repo / ".ai-pr-attribution" / "hooks" / "upload-ref.sh"
+    uploader = repo / ".ai-use" / "hooks" / "upload-ref.sh"
 
     result = subprocess.run(
         ["sh", str(uploader)],
@@ -116,10 +116,10 @@ def test_github_native_workflow_files_have_correct_permissions(tmp_path):
     subprocess.run(["git", "init"], cwd=repo, check=True, capture_output=True)
     install_github_native(repo)
 
-    attribution_yml = (repo / ".github" / "workflows" / "ai-pr-attribution.yml").read_text()
+    attribution_yml = (repo / ".github" / "workflows" / "ai-use.yml").read_text()
     assert "checks: write" in attribution_yml
     # must NOT request pull-requests:write (security minimum)
     assert "pull-requests: write" not in attribution_yml
 
-    dashboard_yml = (repo / ".github" / "workflows" / "ai-pr-attribution-dashboard.yml").read_text()
+    dashboard_yml = (repo / ".github" / "workflows" / "ai-use-dashboard.yml").read_text()
     assert "contents: write" in dashboard_yml

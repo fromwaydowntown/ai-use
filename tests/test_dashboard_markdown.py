@@ -2,13 +2,13 @@
 import subprocess
 from datetime import datetime, timedelta, timezone
 
-from ai_pr_attribution.dashboard_markdown import (
+from ai_use.dashboard_markdown import (
     DASHBOARD_MARKER,
     render_dashboard_markdown,
 )
-from ai_pr_attribution.events import write_chunks
-from ai_pr_attribution.hashing import hash_lines
-from ai_pr_attribution.schema import AiCodeChunk
+from ai_use.events import write_chunks
+from ai_use.hashing import hash_lines
+from ai_use.schema import AiCodeChunk
 
 
 def _chunk(file_path, lines, tool="cursor", event_time=None):
@@ -132,7 +132,7 @@ def test_pct_uses_git_total_when_repo_provided(tmp_path):
 
 
 def test_render_dashboard_cli_writes_file(tmp_path):
-    from ai_pr_attribution.cli import main
+    from ai_use.cli import main
     events = tmp_path / "events.ndjson"
     write_chunks(events, [_chunk("a.py", "x")])
     output = tmp_path / "docs" / "AI_USAGE.md"

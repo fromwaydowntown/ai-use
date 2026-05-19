@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections import Counter, defaultdict
 
-from ai_pr_attribution.hashing import NULL_HASH
-from ai_pr_attribution.schema import AddedLine, AiCodeChunk, AttributionSummary, LineAttribution
+from ai_use.hashing import NULL_HASH
+from ai_use.schema import AddedLine, AiCodeChunk, AttributionSummary, LineAttribution
 
 
 def attribute_lines(added_lines: list[AddedLine], chunks: list[AiCodeChunk]) -> list[LineAttribution]:

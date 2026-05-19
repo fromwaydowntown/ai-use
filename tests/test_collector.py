@@ -3,10 +3,10 @@ import subprocess
 import threading
 import urllib.request
 
-from ai_pr_attribution.collector_server import serve
-from ai_pr_attribution.events import read_chunks, write_chunks
-from ai_pr_attribution.schema import AiCodeChunk
-from ai_pr_attribution.telemetry_client import fetch_telemetry, upload_telemetry
+from ai_use.collector_server import serve
+from ai_use.events import read_chunks, write_chunks
+from ai_use.schema import AiCodeChunk
+from ai_use.telemetry_client import fetch_telemetry, upload_telemetry
 
 
 def test_collector_upload_and_fetch_round_trip(tmp_path):
@@ -18,8 +18,8 @@ def test_collector_upload_and_fetch_round_trip(tmp_path):
     (repo / "README.md").write_text("test\n", encoding="utf-8")
     subprocess.run(["git", "add", "README.md"], cwd=repo, check=True)
     subprocess.run(["git", "commit", "-m", "init"], cwd=repo, check=True, stdout=subprocess.DEVNULL)
-    events = repo / ".ai-pr-attribution" / "events.ndjson"
-    output = repo / ".ai-pr-attribution" / "fetched.ndjson"
+    events = repo / ".ai-use" / "events.ndjson"
+    output = repo / ".ai-use" / "fetched.ndjson"
     write_chunks(
         events,
         [

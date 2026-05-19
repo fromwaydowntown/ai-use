@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-REPO="https://github.com/fromwaydowntown/ai-pr-attribution"
-VENV="$HOME/.ai-pr-attribution-venv"
+REPO="https://github.com/fromwaydowntown/ai-use"
+VENV="$HOME/.ai-use-venv"
 
 if ! git rev-parse --git-dir > /dev/null 2>&1; then
   echo "Error: run this from inside a git repository." >&2
@@ -16,4 +16,4 @@ fi
 
 python3 -m venv "$VENV"
 "$VENV/bin/pip" install --quiet --force-reinstall "git+$REPO.git"
-"$VENV/bin/ai-pr-attribution" install --commit
+"$VENV/bin/ai-use" install --commit

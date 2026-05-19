@@ -3,7 +3,7 @@
 ## Privacy
 
 ### Does any code leave my repo?
-**No.** Every event stored — locally in `.ai-pr-attribution/events.ndjson` and remotely in `refs/ai-attribution/*` — is a SHA-256 hash of one normalized line. No raw line content, no diffs, no file contents. The only "code-like" data stored is the file path the line came from, which is already public in your git history.
+**No.** Every event stored — locally in `.ai-use/events.ndjson` and remotely in `refs/ai-attribution/*` — is a SHA-256 hash of one normalized line. No raw line content, no diffs, no file contents. The only "code-like" data stored is the file path the line came from, which is already public in your git history.
 
 ### Can someone reverse the hashes to recover code?
 For long, distinctive lines (typical code): no — SHA-256 is one-way and there's no dictionary that contains arbitrary code snippets. For short lines (like `import json` or `API_KEY = "abc"`): theoretically yes, with a dictionary attack. We mitigate this two ways:
@@ -13,7 +13,7 @@ For long, distinctive lines (typical code): no — SHA-256 is one-way and there'
 **If you're worried about specific secrets ending up in `events.ndjson`:** the same hooks that capture AI edits would capture any AI-written secret too. The real fix is "don't have AI write secrets," not "don't hash lines." But the hash isn't reversible in any practical sense for substantive code.
 
 ### Where is the data stored?
-- **Locally:** `.ai-pr-attribution/events.ndjson` (gitignored — never committed to the repo)
+- **Locally:** `.ai-use/events.ndjson` (gitignored — never committed to the repo)
 - **Remote:** `refs/ai-attribution/<sha256(your-email)[:16]>` on the same GitHub remote as the repo
 - Nothing sent to any third-party server. Authentication uses your normal git push credentials.
 
@@ -52,7 +52,7 @@ Yes — the systematic under-count is *consistent*, so week-over-week and month-
 
 ### What if a developer's `git config user.email` is unset?
 The pre-push hook refuses to upload events with a clear error message:
-> `ai-pr-attribution: git user.email is not configured. Set it with: git config --global user.email you@example.com`
+> `ai-use: git user.email is not configured. Set it with: git config --global user.email you@example.com`
 
 The hook exits 0 (doesn't block the push), so the developer's `git push` still works — they just won't have their AI usage counted until they configure their email. This is intentional: we'd rather miss a developer's data than silently collapse multiple developers onto the same "unknown" ref.
 
@@ -79,7 +79,7 @@ Not yet. Copilot doesn't expose a per-edit hook the way Cursor and Claude Code d
 ### My PR shows 0% AI but I used Cursor / Claude Code the whole time
 Run through the checks in order:
 1. **Did your IDE actually invoke the hook?** Check that `.cursor/hooks.json` or `.claude/settings.json` exists and contains the `collect-ai-event.sh` command.
-2. **Did the hook produce events?** Look at `.ai-pr-attribution/events.ndjson` — should be non-empty after some AI edits.
+2. **Did the hook produce events?** Look at `.ai-use/events.ndjson` — should be non-empty after some AI edits.
 3. **Did your pre-push fire?** Check `git config user.email` is set. If it's unset, the pre-push silently exits without uploading.
 4. **Did the ref get pushed?** `git ls-remote origin 'refs/ai-attribution/*'` should show your hashed-email ref.
 5. **Did the workflow fetch refs?** Look at the workflow logs for the "Fetch attribution refs" step.
@@ -94,7 +94,7 @@ If the trend is also off (flat when usage is rising, or vice versa), suspect:
 - Files added in PRs are mostly excluded from attribution (large generated files, lockfiles)
 
 ### Workflow fails with 403 on Check Run posting
-Either (a) the PR is from a fork (expected — the workflow gracefully skips), or (b) the workflow's `permissions:` block is missing `checks: write`. Verify `.github/workflows/ai-pr-attribution.yml` has:
+Either (a) the PR is from a fork (expected — the workflow gracefully skips), or (b) the workflow's `permissions:` block is missing `checks: write`. Verify `.github/workflows/ai-use.yml` has:
 
 ```yaml
 permissions:
@@ -118,9 +118,9 @@ See the README's [Uninstall](../README.md#uninstall) section.
 [`install.sh`](../install.sh) — 20 lines, no obfuscation. It:
 1. Checks you're inside a git repo
 2. Verifies `python3` is on `PATH`
-3. Creates an isolated venv at `~/.ai-pr-attribution-venv` (won't touch system Python)
-4. `pip install --force-reinstall git+https://github.com/fromwaydowntown/ai-pr-attribution.git` (always the latest `main`)
-5. Runs `ai-pr-attribution install --commit` in the current repo
+3. Creates an isolated venv at `~/.ai-use-venv` (won't touch system Python)
+4. `pip install --force-reinstall git+https://github.com/fromwaydowntown/ai-use.git` (always the latest `main`)
+5. Runs `ai-use install --commit` in the current repo
 
 The install pulls the latest `main` on every run. If the upstream repo were compromised, the next CI run in any org using the bundled workflow would also pull the compromised code. The mitigation:
 - This repo has branch protection on `main` (PRs only)
@@ -129,9 +129,9 @@ The install pulls the latest `main` on every run. If the upstream repo were comp
 
 If you want to pin to a specific commit:
 ```bash
-pip install "git+https://github.com/fromwaydowntown/ai-pr-attribution.git@<commit-sha>"
-ai-pr-attribution install
+pip install "git+https://github.com/fromwaydowntown/ai-use.git@<commit-sha>"
+ai-use install
 ```
 
 ### What if I want to fork it and host my own?
-Encouraged. Replace `fromwaydowntown/ai-pr-attribution` in `install.sh` and in `src/ai_pr_attribution/data/*workflow.yml` with your own repo. That isolates you from any upstream supply-chain risk entirely.
+Encouraged. Replace `fromwaydowntown/ai-use` in `install.sh` and in `src/ai_use/data/*workflow.yml` with your own repo. That isolates you from any upstream supply-chain risk entirely.

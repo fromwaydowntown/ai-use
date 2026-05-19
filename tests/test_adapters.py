@@ -1,7 +1,7 @@
 import json
 
-from ai_pr_attribution.adapters import chunk_from_hook_payload, parse_hook_stdin
-from ai_pr_attribution.hashing import hash_line
+from ai_use.adapters import chunk_from_hook_payload, parse_hook_stdin
+from ai_use.hashing import hash_line
 
 
 def test_parse_hook_stdin_accepts_json_object():

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ai-use — Track AI in every PR</title>
+  <meta name="description" content="ai-use tracks the percentage of shipped lines that came from AI — per PR, per developer, over time. No servers. No secrets. Hashes only." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080b0f;
+      --bg2: #0d1117;
+      --bg3: #161b22;
+      --border: #21262d;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --accent3: #e3b341;
+      --muted: #8b949e;
+      --text: #e6edf3;
+      --text2: #c9d1d9;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Inter', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+      background: rgba(8, 11, 15, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text);
+      text-decoration: none;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .nav-logo .dot { color: var(--accent); }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-links a {
+      font-size: 0.875rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-github {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.875rem;
+      color: var(--text2);
+      text-decoration: none;
+      padding: 0.375rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg3);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .nav-github:hover { border-color: var(--accent); background: #1f2937; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 6rem 1.5rem 4rem;
+      text-align: center;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 500px;
+      background: radial-gradient(ellipse at center, rgba(88,166,255,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-family: var(--mono); font-size: 0.75rem;
+      color: var(--accent2);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+      background: rgba(63, 185, 80, 0.05);
+      padding: 0.25rem 0.75rem;
+      border-radius: 100px;
+      margin-bottom: 1.5rem;
+    }
+    .hero-badge::before { content: '●'; font-size: 0.6rem; }
+    h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.25rem;
+      max-width: 800px;
+    }
+    h1 span { color: var(--accent); }
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--muted);
+      max-width: 560px;
+      margin-bottom: 2.5rem;
+      line-height: 1.7;
+    }
+    .hero-actions { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-bottom: 3.5rem; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: var(--accent);
+      color: #000;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--text2);
+      font-size: 0.9rem;
+      padding: 0.625rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-decoration: none;
+      background: var(--bg3);
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--muted); transform: translateY(-1px); }
+
+    /* TERMINAL HERO */
+    .terminal {
+      width: 100%; max-width: 720px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      text-align: left;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 24px 64px rgba(0,0,0,0.6);
+    }
+    .terminal-bar {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+    }
+    .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-dot.r { background: #ff5f57; }
+    .terminal-dot.y { background: #febc2e; }
+    .terminal-dot.g { background: #28c840; }
+    .terminal-title { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); margin-left: auto; margin-right: auto; }
+    .terminal-body { padding: 1.25rem 1.5rem; font-family: var(--mono); font-size: 0.85rem; line-height: 1.8; }
+    .t-muted { color: var(--muted); }
+    .t-green { color: var(--accent2); }
+    .t-blue { color: var(--accent); }
+    .t-yellow { color: var(--accent3); }
+    .t-white { color: var(--text); }
+    .t-prompt::before { content: '$ '; color: var(--accent2); }
+    .t-bar-wrap { display: flex; align-items: center; gap: 0.75rem; margin: 0.25rem 0; }
+    .t-bar {
+      height: 8px; border-radius: 4px;
+      background: linear-gradient(90deg, var(--accent2), rgba(63,185,80,0.3));
+      position: relative; overflow: hidden;
+    }
+    .t-bar::after {
+      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      animation: shimmer 2.5s infinite;
+    }
+    @keyframes shimmer { to { left: 100%; } }
+
+    /* INSTALL STRIP */
+    .install-strip {
+      padding: 1rem 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      overflow: hidden;
+      position: relative;
+    }
+    .install-strip-inner {
+      display: flex; align-items: center; justify-content: center;
+      gap: 1rem;
+      font-family: var(--mono); font-size: 0.875rem;
+    }
+    .install-cmd {
+      color: var(--text2);
+      padding: 0.5rem 1rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      position: relative;
+      user-select: all;
+    }
+    .install-cmd:hover { border-color: var(--accent); }
+    .install-cmd .cmd-prefix { color: var(--accent2); }
+    .install-copy {
+      font-size: 0.75rem; color: var(--muted); cursor: pointer;
+      padding: 0.5rem 0.75rem; border: 1px solid var(--border);
+      border-radius: 6px; background: var(--bg3);
+      transition: all 0.15s; font-family: var(--sans);
+    }
+    .install-copy:hover { border-color: var(--muted); color: var(--text); }
+
+    /* STATS */
+    .stats {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0; max-width: 700px; margin: 4rem auto;
+      border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; background: var(--bg2);
+    }
+    .stat {
+      padding: 1.75rem 1.5rem; text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-num {
+      font-family: var(--mono); font-size: 2rem; font-weight: 700;
+      color: var(--accent); display: block; line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .stat-label { font-size: 0.8rem; color: var(--muted); }
+
+    /* SECTION */
+    section { padding: 5rem 1.5rem; max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-family: var(--mono); font-size: 0.75rem;
+      color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+    h2 {
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      font-weight: 700; letter-spacing: -0.02em;
+      margin-bottom: 1rem; max-width: 600px;
+    }
+    h2 span { color: var(--accent); }
+    .section-sub { font-size: 1.05rem; color: var(--muted); max-width: 520px; line-height: 1.7; margin-bottom: 3rem; }
+
+    /* FEATURES GRID */
+    .features {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1px; background: var(--border);
+      border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+    }
+    .feature {
+      background: var(--bg2); padding: 1.75rem;
+      transition: background 0.15s;
+    }
+    .feature:hover { background: var(--bg3); }
+    .feature-icon {
+      font-size: 1.5rem; margin-bottom: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px;
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+    }
+    .feature h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .feature p { font-size: 0.875rem; color: var(--muted); line-height: 1.65; }
+
+    /* HOW IT WORKS */
+    .steps { display: flex; flex-direction: column; gap: 0; max-width: 760px; }
+    .step {
+      display: grid; grid-template-columns: 48px 1fr;
+      gap: 1.25rem; position: relative; padding-bottom: 2.5rem;
+    }
+    .step:last-child { padding-bottom: 0; }
+    .step-num {
+      width: 40px; height: 40px; border-radius: 8px;
+      background: var(--bg3); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 0.85rem; color: var(--accent);
+      font-weight: 700; flex-shrink: 0; position: relative; z-index: 1;
+    }
+    .step::before {
+      content: ''; position: absolute;
+      left: 19px; top: 48px; bottom: 0; width: 1px;
+      background: var(--border);
+    }
+    .step:last-child::before { display: none; }
+    .step-body h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.4rem; padding-top: 0.5rem; }
+    .step-body p { font-size: 0.875rem; color: var(--muted); line-height: 1.65; }
+    .step-code {
+      margin-top: 0.75rem;
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+      padding: 0.625rem 0.875rem;
+      font-family: var(--mono); font-size: 0.8rem; color: var(--text2);
+      overflow-x: auto;
+    }
+
+    /* TREND DEMO */
+    .trend-demo {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.75rem; font-family: var(--mono); font-size: 0.85rem;
+      max-width: 540px;
+    }
+    .trend-row { display: flex; align-items: center; gap: 0.875rem; margin-bottom: 0.6rem; }
+    .trend-label { color: var(--muted); width: 2.5rem; flex-shrink: 0; }
+    .trend-bar-outer {
+      flex: 1; height: 14px; background: var(--bg3);
+      border-radius: 3px; overflow: hidden;
+    }
+    .trend-bar-inner {
+      height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, var(--accent2), rgba(63,185,80,0.5));
+      transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .trend-pct { color: var(--accent2); width: 2.5rem; text-align: right; flex-shrink: 0; }
+    .trend-note { color: var(--muted); font-size: 0.72rem; margin-left: 7rem; margin-top: -0.3rem; margin-bottom: 0.5rem; }
+
+    /* PRIVACY SECTION */
+    .privacy-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center;
+    }
+    .check-list { list-style: none; display: flex; flex-direction: column; gap: 0.75rem; }
+    .check-list li {
+      display: flex; align-items: flex-start; gap: 0.75rem;
+      font-size: 0.9rem; color: var(--text2);
+    }
+    .check-list li::before { content: '✓'; color: var(--accent2); font-family: var(--mono); flex-shrink: 0; margin-top: 0.05rem; }
+
+    /* CTA */
+    .cta-section {
+      text-align: center; padding: 6rem 1.5rem;
+      background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 50%, var(--bg) 100%);
+      border-top: 1px solid var(--border);
+    }
+    .cta-section h2 { margin: 0 auto 1rem; max-width: 100%; }
+    .cta-section p { color: var(--muted); margin-bottom: 2.5rem; font-size: 1.05rem; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .footer-logo { font-family: var(--mono); font-size: 0.875rem; color: var(--muted); }
+    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links a { font-size: 0.8rem; color: var(--muted); text-decoration: none; transition: color 0.15s; }
+    .footer-links a:hover { color: var(--text); }
+
+    /* DIVIDER */
+    .divider { border: none; border-top: 1px solid var(--border); }
+
+    /* RESPONSIVE */
+    @media (max-width: 640px) {
+      nav { padding: 0 1rem; }
+      .nav-links { display: none; }
+      .stats { grid-template-columns: 1fr; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat:last-child { border-bottom: none; }
+      .privacy-grid { grid-template-columns: 1fr; }
+      .install-strip-inner { flex-direction: column; }
+      footer { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hero > * { animation: fadeUp 0.5s ease both; }
+    .hero-badge { animation-delay: 0.05s; }
+    h1 { animation-delay: 0.1s; }
+    .hero-sub { animation-delay: 0.15s; }
+    .hero-actions { animation-delay: 0.2s; }
+    .terminal { animation-delay: 0.25s; }
+
+    /* CURSOR BLINK */
+    .cursor { display: inline-block; width: 8px; height: 14px; background: var(--accent); vertical-align: middle; animation: blink 1s step-end infinite; margin-left: 2px; }
+    @keyframes blink { 50% { opacity: 0; } }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">ai<span class="dot">-</span>use</a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#privacy">Privacy</a>
+    <a href="https://github.com/fromwaydowntown/ai-use/blob/main/docs/FAQ.md">FAQ</a>
+  </div>
+  <a href="https://github.com/fromwaydowntown/ai-use" class="nav-github">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    GitHub
+  </a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-badge">Open source · No servers · No secrets</div>
+  <h1>Know exactly how much AI<br/><span>shipped</span> in every PR</h1>
+  <p class="hero-sub">
+    ai-use tracks the percentage of merged lines that came from AI — per PR, per developer, over time. The number you bring to a planning meeting.
+  </p>
+  <div class="hero-actions">
+    <a href="#install" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm.75 11.56V4a.75.75 0 00-1.5 0v7.56L5.03 9.34a.75.75 0 00-1.06 1.06l3.5 3.5a.75.75 0 001.06 0l3.5-3.5a.75.75 0 10-1.06-1.06L8.75 11.56z"/></svg>
+      Install in 30 seconds
+    </a>
+    <a href="#how" class="btn-secondary">How it works →</a>
+  </div>
+
+  <div class="terminal">
+    <div class="terminal-bar">
+      <span class="terminal-dot r"></span>
+      <span class="terminal-dot y"></span>
+      <span class="terminal-dot g"></span>
+      <span class="terminal-title">PR #247 · feat: add payment retry logic</span>
+    </div>
+    <div class="terminal-body">
+      <div class="t-muted"># GitHub Check Run — ai-use</div>
+      <br/>
+      <div><span class="t-green">✓</span> <span class="t-white">Fetching developer attribution refs…</span></div>
+      <div><span class="t-green">✓</span> <span class="t-white">Parsing PR diff (3 files, 142 lines added)</span></div>
+      <div><span class="t-green">✓</span> <span class="t-white">Matching line hashes against AI events…</span></div>
+      <br/>
+      <div class="t-muted">─────────────────────────────────────────</div>
+      <br/>
+      <div class="t-bar-wrap">
+        <span class="t-white">AI attribution</span>
+        <div class="t-bar" style="width:220px; flex:none;"></div>
+        <span class="t-green">73% AI</span>
+      </div>
+      <div class="t-muted" style="font-size:0.78rem; margin-left:0.25rem">104/142 lines attributed · Claude Code (89) · Cursor (15)</div>
+      <br/>
+      <div class="t-muted">─────────────────────────────────────────</div>
+      <br/>
+      <div><span class="t-blue">→</span> <span class="t-white">Check posted to PR #247</span><span class="cursor"></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- INSTALL STRIP -->
+<div class="install-strip" id="install">
+  <div class="install-strip-inner">
+    <span style="color:var(--muted); font-size:0.8rem; font-family:var(--sans)">Run from inside any git repo:</span>
+    <div class="install-cmd" id="installCmd" onclick="copyInstall()">
+      <span class="cmd-prefix">curl -sSL</span> https://raw.githubusercontent.com/fromwaydowntown/ai-use/main/install.sh | bash
+    </div>
+    <button class="install-copy" id="copyBtn" onclick="copyInstall()">Copy</button>
+  </div>
+</div>
+
+<!-- STATS -->
+<div style="max-width:1100px; margin:0 auto; padding:0 1.5rem;">
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-num">0</span>
+      <span class="stat-label">servers required</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">SHA-256</span>
+      <span class="stat-label">hashes only — no raw code leaves your repo</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">71</span>
+      <span class="stat-label">tests · runs in ~1.5s</span>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="section-label">// how it works</div>
+  <h2>From save to <span>merged</span>, tracked.</h2>
+  <p class="section-sub">Three steps. Installs in your repo. Runs on your existing git push credentials.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:3rem; align-items:start;">
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <h3>IDE hook captures AI edits</h3>
+          <p>When you save a file in Cursor, Claude Code, or Codex, the IDE hook fires. It normalises each line, hashes it with SHA-256, and appends the record locally. No raw code — ever.</p>
+          <div class="step-code">tool: claude_code · 47 line-hashes appended</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <h3>Pre-push uploads your ref</h3>
+          <p>On <code style="font-family:var(--mono); color:var(--accent2)">git push</code>, the pre-push hook stores your events as a git blob and force-pushes it to a per-developer ref. No extra tokens, no secrets — just your normal git auth.</p>
+          <div class="step-code">refs/ai-attribution/&lt;sha256(email)[:16]&gt;</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <h3>GitHub Action posts the check</h3>
+          <p>On every PR open or sync, the workflow fetches all developer refs, downloads the diff, matches hashes, and posts a Check Run with the AI%. Every developer's contribution, counted.</p>
+          <div class="step-code">✓ AI attribution · 73% · PR #247</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="trend-demo">
+        <div style="color:var(--muted); font-size:0.75rem; margin-bottom:1rem;">docs/AI_USAGE.md · weekly trend</div>
+        <div class="trend-row">
+          <span class="trend-label">Jan</span>
+          <div class="trend-bar-outer"><div class="trend-bar-inner" style="width:22%"></div></div>
+          <span class="trend-pct">22%</span>
+        </div>
+        <div class="trend-note">← rolled out Claude Code</div>
+        <div class="trend-row">
+          <span class="trend-label">Feb</span>
+          <div class="trend-bar-outer"><div class="trend-bar-inner" style="width:38%"></div></div>
+          <span class="trend-pct">38%</span>
+        </div>
+        <div class="trend-note">← raised token limits</div>
+        <div class="trend-row">
+          <span class="trend-label">Mar</span>
+          <div class="trend-bar-outer"><div class="trend-bar-inner" style="width:61%"></div></div>
+          <span class="trend-pct">61%</span>
+        </div>
+        <div class="trend-note">← added to onboarding</div>
+        <div class="trend-row">
+          <span class="trend-label">Apr</span>
+          <div class="trend-bar-outer"><div class="trend-bar-inner" style="width:79%"></div></div>
+          <span class="trend-pct">79%</span>
+        </div>
+        <div class="trend-note">← workflow settled</div>
+        <div style="border-top:1px solid var(--border); margin-top:1rem; padding-top:1rem; font-size:0.75rem; color:var(--muted)">
+          Flat or dropping? Something's broken in the workflow.<br/>
+          Rising? Your AI investment is landing.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-label">// features</div>
+  <h2>Built for teams who <span>ship</span>.</h2>
+  <p class="section-sub">Everything you need to understand AI adoption across your engineering org. Nothing you don't.</p>
+
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">⚡</div>
+      <h3>Per-PR Check Runs</h3>
+      <p>Every pull request gets a GitHub Check with the AI percentage. Reviewers see it right in the PR — no dashboard to open.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📊</div>
+      <h3>Auto-generated dashboard</h3>
+      <p>A <code style="font-family:var(--mono); font-size:0.8rem; color:var(--accent2)">docs/AI_USAGE.md</code> with Mermaid charts refreshes on every merge to main. Per-tool breakdown, weekly trend, KPI cards.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔒</div>
+      <h3>Zero code exposure</h3>
+      <p>SHA-256 hashes only. No raw lines, no file contents, no prompts. If the repo burns down, no source code is recoverable from ai-use data.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🛠</div>
+      <h3>Cursor, Claude Code, Codex</h3>
+      <p>IDE hooks for Cursor and Claude Code. Codex Desktop is covered by the pre-commit git hook. New tools are one adapter away.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🌐</div>
+      <h3>Multi-developer, no conflicts</h3>
+      <p>Each developer pushes to their own git ref derived from their email hash. Two people pushing at once never collide.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">📉</div>
+      <h3>Systematically conservative</h3>
+      <p>Edited lines break their hash. Lines under 8 chars are never attributed. Cross-file moves don't count. We'd rather under-report than falsely accuse.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- PRIVACY -->
+<section id="privacy">
+  <div class="privacy-grid">
+    <div>
+      <div class="section-label">// privacy by design</div>
+      <h2>Your code <span>never</span> leaves your repo.</h2>
+      <p class="section-sub">Built around one constraint: no raw code exits the repository. Ever.</p>
+      <ul class="check-list">
+        <li>Only SHA-256 hashes of individual lines are stored</li>
+        <li>No prompts, no file contents, no context windows recorded</li>
+        <li>All data lives inside your existing GitHub repo</li>
+        <li>No external SaaS, no tokens beyond your git credentials</li>
+        <li>Works on private repos — everything stays inside</li>
+        <li>Fully open source — read every line of what runs</li>
+      </ul>
+    </div>
+    <div class="terminal" style="max-width:100%;">
+      <div class="terminal-bar">
+        <span class="terminal-dot r"></span>
+        <span class="terminal-dot y"></span>
+        <span class="terminal-dot g"></span>
+        <span class="terminal-title">events.ndjson (excerpt)</span>
+      </div>
+      <div class="terminal-body" style="font-size:0.78rem; line-height:2;">
+        <div class="t-muted">// what IS stored</div>
+        <div><span class="t-blue">{</span></div>
+        <div>&nbsp;&nbsp;<span class="t-green">"tool"</span>: <span class="t-yellow">"claude_code"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="t-green">"file_path"</span>: <span class="t-yellow">"src/auth/login.py"</span>,</div>
+        <div>&nbsp;&nbsp;<span class="t-green">"line_hashes"</span>: [</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-yellow">"a3f8c1d2e4b7..."</span>,</div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="t-yellow">"9b2e5f0a1c3d..."</span></div>
+        <div>&nbsp;&nbsp;]</div>
+        <div><span class="t-blue">}</span></div>
+        <br/>
+        <div class="t-muted">// what is NOT stored</div>
+        <div class="t-muted">// → raw line content</div>
+        <div class="t-muted">// → prompts or completions</div>
+        <div class="t-muted">// → anything recoverable</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="section-label" style="margin-bottom:1rem;">// get started</div>
+  <h2 style="max-width:560px; margin:0 auto 1rem;">One command.<br/>Every PR, attributed.</h2>
+  <p>Run from inside any git repo. No tokens. No secrets. No sign-up.</p>
+  <div style="display:flex; align-items:center; justify-content:center; gap:1rem; flex-wrap:wrap;">
+    <a href="https://github.com/fromwaydowntown/ai-use" class="btn-primary">
+      View on GitHub
+    </a>
+    <a href="https://github.com/fromwaydowntown/ai-use/blob/main/docs/FAQ.md" class="btn-secondary">
+      Read the FAQ →
+    </a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <span class="footer-logo">ai-use · open source</span>
+  <div class="footer-links">
+    <a href="https://github.com/fromwaydowntown/ai-use">GitHub</a>
+    <a href="https://github.com/fromwaydowntown/ai-use/blob/main/docs/FAQ.md">FAQ</a>
+    <a href="https://github.com/fromwaydowntown/ai-use/blob/main/docs/ROLLOUT.md">Rollout guide</a>
+    <a href="https://github.com/fromwaydowntown/ai-use/blob/main/README.md">Docs</a>
+  </div>
+</footer>
+
+<script>
+  function copyInstall() {
+    const cmd = 'curl -sSL https://raw.githubusercontent.com/fromwaydowntown/ai-use/main/install.sh | bash';
+    navigator.clipboard.writeText(cmd).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = 'Copied!';
+      btn.style.color = 'var(--accent2)';
+      btn.style.borderColor = 'var(--accent2)';
+      setTimeout(() => {
+        btn.textContent = 'Copy';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }, 2000);
+    });
+  }
+</script>
+
+</body>
+</html>
