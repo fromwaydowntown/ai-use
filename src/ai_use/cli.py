@@ -182,7 +182,7 @@ def _install_github_native(repo: Path, commit: bool = False) -> int:
         repo = repo.resolve()
         files = [str(p) for p in created if p.exists()]
         subprocess.run(["git", "-C", str(repo), "add"] + files, check=True)
-        subprocess.run(["git", "-C", str(repo), "commit", "-m", "chore: add AI PR attribution hooks and workflow"], check=True)
+        subprocess.run(["git", "-C", str(repo), "commit", "-m", "chore: add ai-use hooks and workflow"], check=True)
         result = subprocess.run(["git", "-C", str(repo), "push"], capture_output=True)
         if result.returncode == 0:
             print("\nCommitted and pushed.")
@@ -192,7 +192,7 @@ def _install_github_native(repo: Path, commit: bool = False) -> int:
     else:
         print("\nCommit and push to activate:")
         print("  git add .ai-use .github/workflows/ai-use.yml .cursor .claude")
-        print("  git commit -m 'chore: add AI PR attribution'")
+        print("  git commit -m 'chore: add ai-use'")
         print("  git push")
     return 0
 

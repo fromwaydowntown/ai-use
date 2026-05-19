@@ -1,6 +1,6 @@
 # Rollout runbook
 
-How to deploy AI PR Attribution to a real engineering org without it blowing up in your face.
+How to deploy ai-use to a real engineering org without it blowing up in your face.
 
 ## Pre-rollout: 1 week out
 
@@ -130,7 +130,7 @@ Mitigation:
 Mitigation:
 1. The workflow has `conclusion: neutral` — it never blocks merges even when it succeeds.
 2. If it's *failing*, it shows as a red check but devs can still merge (assuming you didn't make it a required check — don't make it a required check).
-3. To temporarily disable: `gh workflow disable "AI PR Attribution"`.
+3. To temporarily disable: `gh workflow disable "ai-use"`.
 
 ### Worst case 4: A secret leaked into events.ndjson and got pushed
 Mitigation:
@@ -157,7 +157,7 @@ git rm -r --ignore-unmatch \
   .claude/settings.json .cursor/hooks.json \
   docs/AI_USAGE.md
 rm -f .git/hooks/pre-commit .git/hooks/pre-push
-git commit -m "chore: remove AI PR attribution"
+git commit -m "chore: remove ai-use"
 git push
 ```
 

@@ -1,10 +1,10 @@
-# AI PR Attribution
+# ai-use
 
 You're spending on AI tooling. Are developers actually using it? Is it shipping?
 
 Most teams can't answer that. Billing dashboards show token spend. They don't show how much of that output survives code review and lands in `main`.
 
-**AI PR Attribution tracks the percentage of shipped lines that came from AI — per PR, per developer, over time.**
+**ai-use tracks the percentage of shipped lines that came from AI — per PR, per developer, over time.**
 
 ```
 AI attribution · `██████░░░░` 61% AI · 49/80 lines
@@ -205,7 +205,7 @@ git rm -r --ignore-unmatch \
   .claude/settings.json .cursor/hooks.json \
   docs/AI_USAGE.md
 rm -f .git/hooks/pre-commit .git/hooks/pre-push
-git commit -m "chore: remove AI PR attribution"
+git commit -m "chore: remove ai-use"
 ```
 
 To also wipe historical events from the remote:

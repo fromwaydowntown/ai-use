@@ -1,4 +1,4 @@
-# MVP Plan: Universal AI PR Attribution System
+# MVP Plan: Universal ai-use System
 
 ## Summary
 

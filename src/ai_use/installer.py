@@ -11,7 +11,7 @@ from ai_use.config import write_config
 HOOK_MARKER = "# ai-use managed hook"
 
 HOOK_SCRIPT = """#!/usr/bin/env sh
-tool="${AI_PR_ATTRIBUTION_TOOL:-cursor}"
+tool="${AI_USE_TOOL:-cursor}"
 repo="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 if [ -x "$repo/.venv/bin/python" ]; then
   py="$repo/.venv/bin/python"
@@ -48,10 +48,10 @@ fi
 
 GITHUB_NATIVE_UPLOAD_SCRIPT = """#!/usr/bin/env sh
 # Guard against recursive invocation when git push is called inside this hook
-if [ "${AI_PR_ATTRIBUTION_UPLOADING:-0}" = "1" ]; then
+if [ "${AI_USE_UPLOADING:-0}" = "1" ]; then
   exit 0
 fi
-export AI_PR_ATTRIBUTION_UPLOADING=1
+export AI_USE_UPLOADING=1
 repo="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 if [ -x "$repo/.venv/bin/python" ]; then
   py="$repo/.venv/bin/python"
@@ -183,7 +183,7 @@ def _install_workflow_file(repo: Path, src_name: str, dest_name: str) -> Path:
 
 def _cursor_hooks_config(runner: Path) -> dict:
     rel = runner.name  # always collect-ai-event.sh
-    command = f'AI_PR_ATTRIBUTION_TOOL=cursor sh "$(git rev-parse --show-toplevel)/.ai-use/hooks/{rel}"'
+    command = f'AI_USE_TOOL=cursor sh "$(git rev-parse --show-toplevel)/.ai-use/hooks/{rel}"'
     return {
         "version": 1,
         "hooks": {
@@ -206,7 +206,7 @@ def _cursor_hooks_config(runner: Path) -> dict:
 
 def _claude_hooks_config(runner: Path) -> dict:
     rel = runner.name  # always collect-ai-event.sh
-    command = f'AI_PR_ATTRIBUTION_TOOL=claude_code sh "$(git rev-parse --show-toplevel)/.ai-use/hooks/{rel}"'
+    command = f'AI_USE_TOOL=claude_code sh "$(git rev-parse --show-toplevel)/.ai-use/hooks/{rel}"'
     return {
         "hooks": {
             "PostToolUse": [{"matcher": "Edit|MultiEdit|Write", "hooks": [{"type": "command", "command": command}]}],
@@ -226,7 +226,7 @@ Codex session patch events before each commit.
 Manual collection is also available (run from repo root):
 
 ```bash
-AI_PR_ATTRIBUTION_TOOL=codex sh {shlex.quote(rel)}
+AI_USE_TOOL=codex sh {shlex.quote(rel)}
 ```
 
 The collector stores hash-only evidence in `.ai-use/events.ndjson`.

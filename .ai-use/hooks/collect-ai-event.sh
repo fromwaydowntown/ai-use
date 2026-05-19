@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-tool="${AI_PR_ATTRIBUTION_TOOL:-cursor}"
+tool="${AI_USE_TOOL:-cursor}"
 repo="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 if [ -x "$repo/.venv/bin/python" ]; then
   py="$repo/.venv/bin/python"

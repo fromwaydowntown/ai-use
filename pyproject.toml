@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Hash-only PR attribution for AI-generated code from Cursor, Claude Code, and Codex."
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [{ name = "AI PR Attribution" }]
+authors = [{ name = "ai-use" }]
 dependencies = []
 
 [project.optional-dependencies]

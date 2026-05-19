@@ -78,7 +78,7 @@ def test_install_github_native_creates_all_expected_files(tmp_path):
 
 def test_pre_push_hook_has_recursion_guard(tmp_path):
     """The pre-push hook calls `git push` to upload events, which would
-    re-trigger pre-push infinitely. AI_PR_ATTRIBUTION_UPLOADING=1 must be
+    re-trigger pre-push infinitely. AI_USE_UPLOADING=1 must be
     set during the inner push so the guard short-circuits.
     """
     repo = tmp_path / "repo"
@@ -88,12 +88,12 @@ def test_pre_push_hook_has_recursion_guard(tmp_path):
 
     uploader = repo / ".ai-use" / "hooks" / "upload-ref.sh"
     content = uploader.read_text()
-    assert 'AI_PR_ATTRIBUTION_UPLOADING' in content
-    assert 'export AI_PR_ATTRIBUTION_UPLOADING=1' in content
+    assert 'AI_USE_UPLOADING' in content
+    assert 'export AI_USE_UPLOADING=1' in content
 
 
 def test_upload_ref_script_exits_zero_when_guard_set(tmp_path):
-    """When AI_PR_ATTRIBUTION_UPLOADING=1 is in the env, the upload script
+    """When AI_USE_UPLOADING=1 is in the env, the upload script
     must exit 0 immediately without doing any work."""
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -104,7 +104,7 @@ def test_upload_ref_script_exits_zero_when_guard_set(tmp_path):
     result = subprocess.run(
         ["sh", str(uploader)],
         cwd=repo,
-        env={**os.environ, "AI_PR_ATTRIBUTION_UPLOADING": "1"},
+        env={**os.environ, "AI_USE_UPLOADING": "1"},
         capture_output=True, text=True,
     )
     assert result.returncode == 0, f"recursion guard failed: {result.stderr}"
