@@ -1,14 +1,14 @@
 # AI Usage
 
 <!-- ai-use:dashboard -->
-_Last updated: 2026-06-28 08:40 UTC_
+_Last updated: 2026-06-29 10:22 UTC_
 
 ## At a glance
 
 | | |
 |---|---|
 | **AI share this week** | **0%** &nbsp; <sub>→ 0 pts vs last week</sub> |
-| **AI lines this week** | 0 of 20 added |
+| **AI lines this week** | 0 of 0 added |
 | **AI lines last 12 weeks** | 11,724 |
 | **Active tools this week** | — |
 
@@ -17,9 +17,9 @@ _Last updated: 2026-06-28 08:40 UTC_
 ```mermaid
 xychart-beta
     title "% of new lines attributed to AI"
-    x-axis ["W15", "W16", "W17", "W18", "W19", "W20", "W21", "W22", "W23", "W24", "W25", "W26"]
+    x-axis ["W16", "W17", "W18", "W19", "W20", "W21", "W22", "W23", "W24", "W25", "W26", "W27"]
     y-axis "%" 0 --> 100
-    line [0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0]
+    line [0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0]
 ```
 
 ## By tool over time
@@ -29,9 +29,9 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Claude Code — AI lines per week"
-    x-axis ["W15", "W16", "W17", "W18", "W19", "W20", "W21", "W22", "W23", "W24", "W25", "W26"]
+    x-axis ["W16", "W17", "W18", "W19", "W20", "W21", "W22", "W23", "W24", "W25", "W26", "W27"]
     y-axis "Lines"
-    bar [0, 0, 0, 0, 0, 8998, 0, 0, 0, 0, 0, 0]
+    bar [0, 0, 0, 0, 8998, 0, 0, 0, 0, 0, 0, 0]
 ```
 
 ### Codex
@@ -39,9 +39,9 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Codex — AI lines per week"
-    x-axis ["W15", "W16", "W17", "W18", "W19", "W20", "W21", "W22", "W23", "W24", "W25", "W26"]
+    x-axis ["W16", "W17", "W18", "W19", "W20", "W21", "W22", "W23", "W24", "W25", "W26", "W27"]
     y-axis "Lines"
-    bar [0, 0, 0, 0, 0, 2720, 0, 0, 0, 0, 0, 0]
+    bar [0, 0, 0, 0, 2720, 0, 0, 0, 0, 0, 0, 0]
 ```
 
 ### Cursor
@@ -49,9 +49,9 @@ xychart-beta
 ```mermaid
 xychart-beta
     title "Cursor — AI lines per week"
-    x-axis ["W15", "W16", "W17", "W18", "W19", "W20", "W21", "W22", "W23", "W24", "W25", "W26"]
+    x-axis ["W16", "W17", "W18", "W19", "W20", "W21", "W22", "W23", "W24", "W25", "W26", "W27"]
     y-axis "Lines"
-    bar [0, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0]
+    bar [0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0]
 ```
 
 
