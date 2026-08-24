@@ -1,14 +1,14 @@
 # AI Usage
 
 <!-- ai-use:dashboard -->
-_Last updated: 2026-08-23 06:23 UTC_
+_Last updated: 2026-08-24 06:36 UTC_
 
 ## At a glance
 
 | | |
 |---|---|
 | **AI share this week** | **0%** &nbsp; <sub>→ 0 pts vs last week</sub> |
-| **AI lines this week** | 0 of 13 added |
+| **AI lines this week** | 0 of 0 added |
 | **AI lines last 12 weeks** | 0 |
 | **Active tools this week** | — |
 
@@ -17,7 +17,7 @@ _Last updated: 2026-08-23 06:23 UTC_
 ```mermaid
 xychart-beta
     title "% of new lines attributed to AI"
-    x-axis ["W23", "W24", "W25", "W26", "W27", "W28", "W29", "W30", "W31", "W32", "W33", "W34"]
+    x-axis ["W24", "W25", "W26", "W27", "W28", "W29", "W30", "W31", "W32", "W33", "W34", "W35"]
     y-axis "%" 0 --> 100
     line [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ```
